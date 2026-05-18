@@ -28,7 +28,7 @@
           <td :class="{ low: r.quantity <= r.safety_stock && r.safety_stock > 0 }">{{ r.quantity }}</td>
           <td>{{ r.safety_stock }}</td><td>{{ r.avg_cost }}</td>
           <td>{{ (r.quantity * r.avg_cost).toFixed(2) }}</td>
-          <td><button @click="openSafety(r)">设置安全库存</button></td>
+          <td v-if="canWrite()"><button @click="openSafety(r)">设置安全库存</button></td>
         </tr>
         <tr v-if="list.length === 0"><td colspan="9" class="empty">暂无数据</td></tr>
       </tbody>
@@ -51,7 +51,7 @@
     </div>
 
     <!-- Stock check -->
-    <div class="card" style="margin-top:24px">
+    <div v-if="canWrite()" class="card" style="margin-top:24px">
       <h2>库存盘点</h2>
       <select v-model="checkWarehouse" style="width:200px;display:block;margin-bottom:12px">
         <option value="">选择仓库</option>
@@ -79,7 +79,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getInventory, updateSafetyStock, getWarehouses, doInventoryCheck } from '../api.js'
-import { debounce } from '../utils.js'
+import { debounce, canWrite } from '../utils.js'
 
 const list = ref([]), search = ref(''), warehouseFilter = ref(''), categoryFilter = ref('')
 const page = ref(1), total = ref(0), pageSize = 20

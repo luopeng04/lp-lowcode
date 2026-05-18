@@ -47,8 +47,9 @@ router.post('/api/auth/register', async (req, res) => {
       await createTenantDatabase(dbName)
       await seedTenantData(tenantId, dbName, phone, passwordHash)
     } catch (err) {
-      // Rollback tenant record if DB creation fails
+      // Rollback: delete tenant record and drop database
       await platform.query('DELETE FROM tenants WHERE id = ?', [tenantId])
+      try { await platform.query(`DROP DATABASE \`${dbName}\``) } catch {}
       throw err
     }
 

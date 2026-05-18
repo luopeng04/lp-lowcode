@@ -2,7 +2,7 @@
   <div class="page">
     <div class="header">
       <h1>商品管理</h1>
-      <div class="header-actions">
+      <div class="header-actions" v-if="canWrite()">
         <button class="btn-secondary" @click="openCustomFields">自定义字段</button>
         <button class="btn-primary" @click="openCreate">+ 新建商品</button>
       </div>
@@ -33,7 +33,7 @@
           <td v-for="f in customFields" :key="f.field_name">
             {{ (p.custom_data || {})[f.field_name] || '-' }}
           </td>
-          <td>
+          <td v-if="canWrite()">
             <button @click="openEdit(p)">编辑</button>
             <button class="btn-danger" @click="handleDelete(p)">删除</button>
           </td>
@@ -134,7 +134,7 @@ import {
   getProducts, createProduct, updateProduct, deleteProduct,
   getCategories, getCustomFields, createCustomField, deleteCustomField,
 } from '../api.js'
-import { debounce } from '../utils.js'
+import { debounce, canWrite } from '../utils.js'
 
 const list = ref([]), search = ref(''), categoryFilter = ref(''), page = ref(1), total = ref(0), pageSize = 20
 const categories = ref([])

@@ -2,7 +2,7 @@
   <div class="page">
     <div class="header">
       <h1>采购单</h1>
-      <button class="btn-primary" @click="openCreate">+ 新建采购单</button>
+      <button v-if="canWrite()" class="btn-primary" @click="openCreate">+ 新建采购单</button>
     </div>
 
     <div class="toolbar">
@@ -29,7 +29,7 @@
           <td>{{ po.total_amount }}</td>
           <td><span :class="`status-${po.status}`">{{ statusMap[po.status] }}</span></td>
           <td>{{ po.ordered_at || po.created_at?.slice(0,10) }}</td>
-          <td>
+          <td v-if="canWrite()">
             <button v-if="po.status === 'draft'" @click="handleConfirm(po)">审核</button>
             <button v-if="po.status === 'confirmed'" class="btn-primary-sm" @click="handleReceive(po)">入库</button>
           </td>
@@ -105,7 +105,7 @@
 import { ref, onMounted, reactive } from 'vue'
 import { getProducts, getWarehouses, getSuppliers } from '../api.js'
 import { getPurchaseOrders, createPurchaseOrder, confirmPurchaseOrder, receivePurchaseOrder } from '../api.js'
-import { debounce } from '../utils.js'
+import { debounce, canWrite } from '../utils.js'
 
 const list = ref([]), search = ref(''), statusFilter = ref(''), page = ref(1), total = ref(0), pageSize = 20
 const showModal = ref(false), saving = ref(false), error = ref('')

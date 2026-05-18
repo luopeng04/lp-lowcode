@@ -32,7 +32,7 @@
         </tbody>
       </table>
 
-      <div class="actions">
+      <div v-if="canWrite()" class="actions">
         <button v-if="order.status === 'draft'" class="btn-primary" @click="handleConfirm">审核通过</button>
         <button v-if="order.status === 'confirmed'" class="btn-receive" @click="handleReceive">确认入库</button>
       </div>
@@ -44,6 +44,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getPurchaseOrder, confirmPurchaseOrder, receivePurchaseOrder } from '../api.js'
+import { canWrite } from '../utils.js'
 
 const route = useRoute()
 const router = useRouter()

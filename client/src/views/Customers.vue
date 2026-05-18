@@ -2,7 +2,7 @@
   <div class="page">
     <div class="header">
       <h1>客户管理</h1>
-      <button class="btn-primary" @click="openCreate">+ 新建客户</button>
+      <button v-if="canWrite()" class="btn-primary" @click="openCreate">+ 新建客户</button>
     </div>
 
     <input v-model="search" @input="onSearch" placeholder="搜索名称/编码/联系人..." class="search" />
@@ -15,7 +15,7 @@
         <tr v-for="c in list" :key="c.id">
           <td>{{ c.code }}</td><td>{{ c.name }}</td><td>{{ c.contact || '-' }}</td>
           <td>{{ c.phone || '-' }}</td><td>{{ c.address || '-' }}</td><td>{{ c.remark || '-' }}</td>
-          <td>
+          <td v-if="canWrite()">
             <button @click="openEdit(c)">编辑</button>
             <button class="btn-danger" @click="handleDelete(c)">删除</button>
           </td>
@@ -54,7 +54,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getCustomers, createCustomer, updateCustomer, deleteCustomer } from '../api.js'
-import { debounce } from '../utils.js'
+import { debounce, canWrite } from '../utils.js'
 
 const list = ref([]), search = ref(''), page = ref(1), total = ref(0), pageSize = 20
 

@@ -2,7 +2,7 @@
   <div class="page">
     <div class="header">
       <h1>供应商管理</h1>
-      <button class="btn-primary" @click="openCreate">+ 新建供应商</button>
+      <button v-if="canWrite()" class="btn-primary" @click="openCreate">+ 新建供应商</button>
     </div>
 
     <input v-model="search" @input="onSearch" placeholder="搜索名称/编码/联系人..." class="search" />
@@ -15,7 +15,7 @@
         <tr v-for="s in list" :key="s.id">
           <td>{{ s.code }}</td><td>{{ s.name }}</td><td>{{ s.contact || '-' }}</td>
           <td>{{ s.phone || '-' }}</td><td>{{ s.address || '-' }}</td><td>{{ s.remark || '-' }}</td>
-          <td>
+          <td v-if="canWrite()">
             <button @click="openEdit(s)">编辑</button>
             <button class="btn-danger" @click="handleDelete(s)">删除</button>
           </td>
@@ -54,7 +54,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getSuppliers, createSupplier, updateSupplier, deleteSupplier } from '../api.js'
-import { debounce } from '../utils.js'
+import { debounce, canWrite } from '../utils.js'
 
 const list = ref([]), search = ref(''), page = ref(1), total = ref(0), pageSize = 20
 

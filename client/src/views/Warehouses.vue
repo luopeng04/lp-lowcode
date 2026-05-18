@@ -2,7 +2,7 @@
   <div class="page">
     <div class="header">
       <h1>仓库管理</h1>
-      <button class="btn-primary" @click="openCreate">+ 新建仓库</button>
+      <button v-if="canWrite()" class="btn-primary" @click="openCreate">+ 新建仓库</button>
     </div>
 
     <input v-model="search" @input="debouncedSearch" placeholder="搜索名称或编码..." class="search" />
@@ -20,7 +20,7 @@
           <td>{{ w.contact || '-' }}</td>
           <td>{{ w.address || '-' }}</td>
           <td>{{ w.is_default ? '✓' : '' }}</td>
-          <td>
+          <td v-if="canWrite()">
             <button @click="openEdit(w)">编辑</button>
             <button v-if="!w.is_default" class="btn-danger" @click="handleDelete(w)">删除</button>
           </td>
@@ -63,7 +63,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getWarehouses, createWarehouse, updateWarehouse, deleteWarehouse } from '../api.js'
-import { debounce } from '../utils.js'
+import { debounce, canWrite } from '../utils.js'
 
 const list = ref([])
 const search = ref('')
