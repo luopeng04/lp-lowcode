@@ -5,7 +5,7 @@
 .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .header h1, .page h1 { font-size: 20px; margin-bottom: 16px; }
 .toolbar { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
-.toolbar .search { width: 220px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
+.search, .toolbar .search { width: 220px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
 .toolbar select, .toolbar .filter, .page select {
   padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;
 }
