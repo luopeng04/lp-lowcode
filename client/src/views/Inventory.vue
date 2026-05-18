@@ -66,7 +66,7 @@
             <td>{{ item.product_name }}</td>
             <td>{{ item.book_qty }}</td>
             <td><input v-model.number="item.actual_qty" type="number" step="0.01" /></td>
-            <td :class="{ diff: item.diff !== 0 }">{{ item.diff }}</td>
+            <td :class="{ diff: (item.actual_qty - item.book_qty) !== 0 }">{{ (item.actual_qty - item.book_qty).toFixed(2) }}</td>
           </tr>
         </tbody>
       </table>
@@ -77,7 +77,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { getInventory, updateSafetyStock, getWarehouses, doInventoryCheck } from '../api.js'
 import { debounce } from '../utils.js'
 
@@ -120,25 +120,12 @@ async function loadCheckItems() {
   const data = await getInventory({ warehouse_id: checkWarehouse.value, pageSize: 1000 })
   checkItems.value = data.data.map(r => ({
     product_id: r.product_id, product_name: r.product_name,
-    book_qty: parseFloat(r.quantity), actual_qty: 0, diff: 0,
+    book_qty: parseFloat(r.quantity), actual_qty: 0,
   }))
-}
-
-// Compute diffs reactively
-const checkItemsWithDiff = computed(() => {
-  return checkItems.value.map(item => ({
-    ...item,
-    diff: (item.actual_qty || 0) - item.book_qty
-  }))
-})
-
-// Watch for changes
-function updateDiffs() {
-  checkItems.value = checkItemsWithDiff.value
 }
 
 async function submitCheck() {
-  await doInventoryCheck({ warehouse_id: checkWarehouse.value, items: checkItemsWithDiff.value.map(i => ({
+  await doInventoryCheck({ warehouse_id: checkWarehouse.value, items: checkItems.value.map(i => ({
     product_id: i.product_id, actual_qty: i.actual_qty || 0
   }))})
   checkResult.value = '盘点完成！库存已更新。'
