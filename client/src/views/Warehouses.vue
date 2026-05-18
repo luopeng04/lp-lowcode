@@ -149,6 +149,6 @@ td button { margin-right: 6px; padding: 4px 10px; font-size: 12px; border: 1px s
 .modal input { width: 100%; padding: 7px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; margin-bottom: 10px; box-sizing: border-box; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
 .modal-actions button { padding: 7px 18px; font-size: 13px; border: 1px solid #ddd; border-radius: 4px; background: #fff; cursor: pointer; }
-.modal-actions .btn-primary { border: none; }
+.modal-actions .btn-primary { background: #1a56db; color: #fff; border: none; }
 .error { color: #d32; font-size: 13px; }
 </style>
