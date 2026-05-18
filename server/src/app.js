@@ -7,6 +7,7 @@ const authRoutes = require('./routes/auth')
 const warehouseRoutes = require('./routes/warehouses')
 const supplierRoutes = require('./routes/suppliers')
 const customerRoutes = require('./routes/customers')
+const productRoutes = require('./routes/products')
 
 const app = express()
 
@@ -20,6 +21,7 @@ app.use(tenantMiddleware)
 app.use(warehouseRoutes)
 app.use(supplierRoutes)
 app.use(customerRoutes)
+app.use(productRoutes)
 app.use(routes)
 app.use(errorHandler)
 

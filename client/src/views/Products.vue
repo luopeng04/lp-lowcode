@@ -1,0 +1,264 @@
+<template>
+  <div class="page">
+    <div class="header">
+      <h1>商品管理</h1>
+      <div class="header-actions">
+        <button class="btn-secondary" @click="openCustomFields">自定义字段</button>
+        <button class="btn-primary" @click="openCreate">+ 新建商品</button>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <input v-model="search" @input="onSearch" placeholder="搜索名称/编码..." class="search" />
+      <select v-model="categoryFilter" @change="onSearch" class="filter">
+        <option value="">全部分类</option>
+        <option v-for="c in categories" :key="c.name" :value="c.name">{{ c.name }}</option>
+      </select>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>编码</th><th>名称</th><th>规格</th><th>单位</th><th>分类</th>
+          <th>成本价</th><th>销售价</th>
+          <th v-for="f in customFields" :key="f.field_name">{{ f.field_label }}</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="p in list" :key="p.id">
+          <td>{{ p.code }}</td><td>{{ p.name }}</td><td>{{ p.spec || '-' }}</td>
+          <td>{{ p.unit }}</td><td>{{ p.category || '-' }}</td>
+          <td>{{ p.cost_price }}</td><td>{{ p.sale_price }}</td>
+          <td v-for="f in customFields" :key="f.field_name">
+            {{ (p.custom_data || {})[f.field_name] || '-' }}
+          </td>
+          <td>
+            <button @click="openEdit(p)">编辑</button>
+            <button class="btn-danger" @click="handleDelete(p)">删除</button>
+          </td>
+        </tr>
+        <tr v-if="list.length === 0"><td :colspan="8 + customFields.length" class="empty">暂无数据</td></tr>
+      </tbody>
+    </table>
+
+    <div class="pager" v-if="total > pageSize">
+      <button :disabled="page <= 1" @click="page--; fetchList()">上一页</button>
+      <span>{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
+      <button :disabled="page >= Math.ceil(total / pageSize)" @click="page++; fetchList()">下一页</button>
+    </div>
+
+    <!-- Product form modal -->
+    <div class="modal-overlay" v-if="showModal" @click.self="closeModal">
+      <div class="modal">
+        <h2>{{ editing ? '编辑商品' : '新建商品' }}</h2>
+        <form @submit.prevent="handleSave">
+          <label>编码 *</label><input v-model="form.code" :disabled="!!editing" required />
+          <label>名称 *</label><input v-model="form.name" required />
+          <div class="row">
+            <div><label>规格</label><input v-model="form.spec" /></div>
+            <div><label>单位</label><input v-model="form.unit" placeholder="个" /></div>
+          </div>
+          <div class="row">
+            <div><label>分类</label>
+              <select v-model="form.category">
+                <option value="">未分类</option>
+                <option v-for="c in categories" :key="c.name" :value="c.name">{{ c.name }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div><label>成本价</label><input v-model.number="form.cost_price" type="number" step="0.01" /></div>
+            <div><label>销售价</label><input v-model.number="form.sale_price" type="number" step="0.01" /></div>
+          </div>
+
+          <!-- Dynamic custom fields -->
+          <div v-for="f in customFields" :key="f.field_name">
+            <label>{{ f.field_label }} <span v-if="f.is_required" class="required">*</span></label>
+            <input v-if="f.field_type === 'text' || f.field_type === 'number'" v-model="form.custom_data[f.field_name]" :type="f.field_type" />
+            <select v-else-if="f.field_type === 'select'" v-model="form.custom_data[f.field_name]">
+              <option value="">请选择</option>
+              <option v-for="opt in (typeof f.options === 'string' ? JSON.parse(f.options) : f.options || [])" :key="opt" :value="opt">{{ opt }}</option>
+            </select>
+            <input v-else-if="f.field_type === 'date'" v-model="form.custom_data[f.field_name]" type="date" />
+          </div>
+
+          <p v-if="error" class="error">{{ error }}</p>
+          <div class="modal-actions">
+            <button type="button" @click="closeModal">取消</button>
+            <button type="submit" class="btn-primary" :disabled="saving">{{ saving ? '保存中...' : '保存' }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Custom fields config modal -->
+    <div class="modal-overlay" v-if="showFieldsModal" @click.self="closeCustomFields">
+      <div class="modal">
+        <h2>自定义字段配置</h2>
+        <div v-if="customFields.length === 0" class="hint">还没有自定义字段，添加一个吧。</div>
+        <ul class="field-list" v-if="customFields.length > 0">
+          <li v-for="f in customFields" :key="f.id">
+            <span>{{ f.field_label }} <small>({{ f.field_type }})</small></span>
+            <button class="btn-sm" @click="deleteField(f)">删除</button>
+          </li>
+        </ul>
+        <hr />
+        <h3>添加字段</h3>
+        <label>字段名（英文）</label><input v-model="newField.field_name" placeholder="如: brand" />
+        <label>显示标签</label><input v-model="newField.field_label" placeholder="如: 品牌" />
+        <label>类型</label>
+        <select v-model="newField.field_type">
+          <option value="text">文本</option>
+          <option value="number">数字</option>
+          <option value="select">下拉</option>
+          <option value="date">日期</option>
+        </select>
+        <div v-if="newField.field_type === 'select'">
+          <label>选项（逗号分隔）</label>
+          <input v-model="newField.optionsStr" placeholder="选项1,选项2,选项3" />
+        </div>
+        <p v-if="fieldError" class="error">{{ fieldError }}</p>
+        <div class="modal-actions">
+          <button type="button" @click="closeCustomFields">关闭</button>
+          <button type="button" class="btn-primary" @click="addField">添加</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, reactive } from 'vue'
+import {
+  getProducts, createProduct, updateProduct, deleteProduct,
+  getCategories, getCustomFields, createCustomField, deleteCustomField,
+} from '../api.js'
+import { debounce } from '../utils.js'
+
+const list = ref([]), search = ref(''), categoryFilter = ref(''), page = ref(1), total = ref(0), pageSize = 20
+const categories = ref([])
+const customFields = ref([])
+const showModal = ref(false), editing = ref(null), saving = ref(false), error = ref('')
+const form = reactive({ code: '', name: '', spec: '', unit: '个', category: '', cost_price: 0, sale_price: 0, custom_data: {} })
+const showFieldsModal = ref(false), fieldError = ref('')
+const newField = reactive({ field_name: '', field_label: '', field_type: 'text', optionsStr: '' })
+
+async function fetchList() {
+  const data = await getProducts({ search: search.value, category: categoryFilter.value, page: page.value })
+  list.value = data.data; total.value = data.total
+}
+
+function onSearch() { page.value = 1; debouncedSearch() }
+const debouncedSearch = debounce(fetchList, 300)
+
+async function loadMeta() {
+  const [catData, fieldData] = await Promise.all([getCategories(), getCustomFields()])
+  categories.value = [...catData.data.filter(c => c.id), ...catData.fromProducts]
+  customFields.value = fieldData.data
+}
+
+function openCreate() {
+  editing.value = null; error.value = ''
+  form.code = ''; form.name = ''; form.spec = ''; form.unit = '个'
+  form.category = ''; form.cost_price = 0; form.sale_price = 0
+  form.custom_data = {}
+  showModal.value = true
+}
+
+function openEdit(p) {
+  editing.value = p; error.value = ''
+  form.code = p.code; form.name = p.name; form.spec = p.spec || ''
+  form.unit = p.unit; form.category = p.category || ''
+  form.cost_price = p.cost_price; form.sale_price = p.sale_price
+  form.custom_data = { ...(p.custom_data || {}) }
+  showModal.value = true
+}
+
+function closeModal() { showModal.value = false }
+
+async function handleSave() {
+  error.value = ''; saving.value = true
+  try {
+    const data = {
+      code: form.code, name: form.name, spec: form.spec, unit: form.unit,
+      category: form.category, cost_price: form.cost_price, sale_price: form.sale_price,
+      custom_data: form.custom_data,
+    }
+    if (editing.value) await updateProduct(editing.value.id, data)
+    else await createProduct(data)
+    closeModal(); await fetchList()
+  } catch (e) { error.value = e.message } finally { saving.value = false }
+}
+
+async function handleDelete(p) {
+  if (!confirm(`确认删除商品"${p.name}"？`)) return
+  try { await deleteProduct(p.id); await fetchList() } catch (e) { alert(e.message) }
+}
+
+function openCustomFields() { fieldError.value = ''; newField.field_name = ''; newField.field_label = ''; newField.field_type = 'text'; newField.optionsStr = ''; showFieldsModal.value = true }
+
+function closeCustomFields() { showFieldsModal.value = false }
+
+async function addField() {
+  fieldError.value = ''
+  if (!newField.field_name || !newField.field_label) { fieldError.value = '请填写完整'; return }
+  try {
+    const data = { field_name: newField.field_name, field_label: newField.field_label, field_type: newField.field_type }
+    if (newField.field_type === 'select') {
+      data.options = newField.optionsStr.split(',').map(s => s.trim()).filter(Boolean)
+    }
+    await createCustomField(data)
+    await loadMeta()
+    newField.field_name = ''; newField.field_label = ''; newField.field_type = 'text'; newField.optionsStr = ''
+  } catch (e) { fieldError.value = e.message }
+}
+
+async function deleteField(f) {
+  if (!confirm(`删除字段"${f.field_label}"？`)) return
+  await deleteCustomField(f.id)
+  await loadMeta()
+}
+
+onMounted(async () => { await loadMeta(); await fetchList() })
+</script>
+
+<style scoped>
+.page { max-width: 1100px; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+h1 { font-size: 20px; }
+.header-actions { display: flex; gap: 10px; }
+.btn-primary { padding: 8px 20px; background: #1a56db; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+.btn-secondary { padding: 8px 20px; background: #fff; color: #1a56db; border: 1px solid #1a56db; border-radius: 4px; cursor: pointer; font-size: 14px; }
+.toolbar { display: flex; gap: 10px; margin-bottom: 12px; }
+.search { width: 220px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
+.filter { padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
+table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 6px; overflow: hidden; }
+th, td { padding: 10px 12px; text-align: left; font-size: 13px; border-bottom: 1px solid #eee; }
+th { background: #f7f8fa; color: #555; font-weight: 600; }
+td button { margin-right: 6px; padding: 4px 10px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px; background: #fff; cursor: pointer; }
+.btn-danger { color: #d32; border-color: #ecc; }
+.empty { text-align: center; color: #999; padding: 40px; }
+.pager { display: flex; align-items: center; gap: 12px; margin-top: 16px; font-size: 13px; justify-content: center; }
+.pager button { padding: 4px 12px; border: 1px solid #ddd; border-radius: 4px; background: #fff; cursor: pointer; }
+.pager button:disabled { opacity: .4; cursor: not-allowed; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.3); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.modal { background: #fff; padding: 24px; border-radius: 8px; width: 460px; max-height: 80vh; overflow-y: auto; }
+.modal h2 { font-size: 17px; margin-bottom: 16px; }
+.modal h3 { font-size: 14px; margin-bottom: 8px; }
+.modal label { display: block; font-size: 13px; color: #555; margin-bottom: 2px; }
+.modal input, .modal select { width: 100%; padding: 7px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; margin-bottom: 8px; box-sizing: border-box; }
+.row { display: flex; gap: 10px; }
+.row > div { flex: 1; }
+.required { color: #d32; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px; }
+.modal-actions button { padding: 7px 18px; font-size: 13px; border: 1px solid #ddd; border-radius: 4px; background: #fff; cursor: pointer; }
+.modal-actions .btn-primary { background: #1a56db; color: #fff; border: none; }
+.error { color: #d32; font-size: 13px; }
+.field-list { list-style: none; padding: 0; }
+.field-list li { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #eee; font-size: 14px; }
+.field-list li small { color: #999; }
+.btn-sm { padding: 2px 8px; font-size: 12px; border: 1px solid #ecc; color: #d32; border-radius: 3px; background: #fff; cursor: pointer; }
+.hint { color: #999; font-size: 13px; margin-bottom: 10px; }
+hr { border: none; border-top: 1px solid #eee; margin: 12px 0; }
+</style>

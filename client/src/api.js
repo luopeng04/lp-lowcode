@@ -73,3 +73,39 @@ export function updateCustomer(id, data) {
 export function deleteCustomer(id) {
   return request(`/customers/${id}`, { method: 'DELETE' })
 }
+
+// Products
+export function getProducts({ search, category, page = 1 } = {}) {
+  const params = new URLSearchParams({ page })
+  if (search) params.set('search', search)
+  if (category) params.set('category', category)
+  return request(`/products?${params}`)
+}
+export function createProduct(data) {
+  return request('/products', { method: 'POST', body: JSON.stringify(data) })
+}
+export function updateProduct(id, data) {
+  return request(`/products/${id}`, { method: 'PUT', body: JSON.stringify(data) })
+}
+export function deleteProduct(id) {
+  return request(`/products/${id}`, { method: 'DELETE' })
+}
+
+// Categories
+export function getCategories() {
+  return request('/categories')
+}
+export function createCategory(name) {
+  return request('/categories', { method: 'POST', body: JSON.stringify({ name }) })
+}
+
+// Custom fields
+export function getCustomFields(entity = 'product') {
+  return request(`/custom-fields?entity=${entity}`)
+}
+export function createCustomField(data) {
+  return request('/custom-fields', { method: 'POST', body: JSON.stringify(data) })
+}
+export function deleteCustomField(id) {
+  return request(`/custom-fields/${id}`, { method: 'DELETE' })
+}

@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS products (
   category VARCHAR(50) COMMENT '分类',
   cost_price DECIMAL(12,2) NOT NULL DEFAULT 0 COMMENT '成本价',
   sale_price DECIMAL(12,2) NOT NULL DEFAULT 0 COMMENT '销售价',
+  custom_data JSON COMMENT '自定义字段值',
   status TINYINT NOT NULL DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -136,5 +137,28 @@ CREATE TABLE IF NOT EXISTS inventory_ledgers (
   cost_price DECIMAL(12,2) NOT NULL,
   order_type VARCHAR(20) COMMENT '关联单据类型',
   order_id INT COMMENT '关联单据ID',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- 自定义字段配置
+CREATE TABLE IF NOT EXISTS custom_fields (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  entity VARCHAR(50) NOT NULL DEFAULT 'product',
+  field_name VARCHAR(100) NOT NULL,
+  field_label VARCHAR(100) NOT NULL,
+  field_type ENUM('text','number','select','date') NOT NULL DEFAULT 'text',
+  options JSON COMMENT 'select类型的选项列表',
+  display_order INT NOT NULL DEFAULT 0,
+  is_required TINYINT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY (entity, field_name)
+) ENGINE=InnoDB;
+
+-- 商品分类
+CREATE TABLE IF NOT EXISTS categories (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  parent_id INT DEFAULT 0,
+  display_order INT NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
