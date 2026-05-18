@@ -193,8 +193,9 @@ router.put('/api/sales-orders/:id/deliver', async (req, res) => {
     res.json({ ok: true })
   } catch (err) {
     await conn.rollback()
-    console.error('[deliver]', err)
-    res.status(400).json({ error: err.message || '出库失败' })
+    // Business errors (stock insufficient, etc.) have no code → 400; system errors → 500
+    if (err.code) throw err
+    res.status(400).json({ error: err.message })
   } finally {
     conn.release()
   }

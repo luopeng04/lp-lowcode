@@ -189,3 +189,9 @@ export function getInventoryLedgers({ product_id, warehouse_id, type, start_date
 export function doInventoryCheck(data) {
   return request('/inventory-check', { method: 'POST', body: JSON.stringify(data) })
 }
+
+// Reports
+export function getReport(path, params = {}) {
+  const qs = new URLSearchParams(params).toString()
+  return request(`/reports/${path}?${qs}`)
+}

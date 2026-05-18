@@ -1,6 +1,5 @@
 const { Router } = require('express')
 const { getTenantPool } = require('../config/database')
-const { requireRole } = require('../middleware/operator')
 const { validateId, writeGuard } = require('../utils')
 
 const router = Router()
@@ -41,7 +40,7 @@ router.get('/api/inventory', async (req, res) => {
 })
 
 // PUT /api/inventory/:id/safety-stock
-router.put('/api/inventory/:id/safety-stock', requireRole('admin', 'operator'), async (req, res) => {
+router.put('/api/inventory/:id/safety-stock', async (req, res) => {
   const pool = getTenantPool(req.tenant.db_name)
   const id = validateId(req.params.id)
   if (!id) return res.status(400).json({ error: '参数错误' })
@@ -84,7 +83,7 @@ router.get('/api/inventory-ledgers', async (req, res) => {
 })
 
 // POST /api/inventory-check
-router.post('/api/inventory-check', requireRole('admin', 'operator'), async (req, res) => {
+router.post('/api/inventory-check', async (req, res) => {
   const pool = getTenantPool(req.tenant.db_name)
   const { warehouse_id, items } = req.body
   if (!warehouse_id || !items || items.length === 0) {
@@ -111,12 +110,19 @@ router.post('/api/inventory-check', requireRole('admin', 'operator'), async (req
         diff,
       })
 
-      // Optionally update to actual qty (adjustment)
-      if (invs.length > 0) {
+      // Record adjustment
+      if (diff !== 0) {
+        const type = diff > 0 ? 'in' : 'out'
         await conn.query(
-          'UPDATE inventories SET quantity = ? WHERE product_id = ? AND warehouse_id = ?',
-          [item.actual_qty, item.product_id, warehouse_id]
+          "INSERT INTO inventory_ledgers (product_id, warehouse_id, type, quantity, cost_price, order_type, order_id) VALUES (?,?,?,?,0,'check',0)",
+          [item.product_id, warehouse_id, type, Math.abs(diff)]
         )
+        if (invs.length > 0) {
+          await conn.query(
+            'UPDATE inventories SET quantity = ? WHERE product_id = ? AND warehouse_id = ?',
+            [item.actual_qty, item.product_id, warehouse_id]
+          )
+        }
       }
     }
 

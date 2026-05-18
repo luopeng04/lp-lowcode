@@ -101,7 +101,7 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
-import { getWarehouses, getProducts } from '../api.js'
+import { getWarehouses, getProducts, getReport } from '../api.js'
 
 const tab = ref('sales')
 const tabs = [
@@ -116,31 +116,27 @@ const warehouseFilter = ref(''), productFilter = ref('')
 const warehouses = ref([]), products = ref([])
 
 async function load() {
-  const tenant = JSON.parse(localStorage.getItem('tenant') || '{}')
-  const headers = { 'X-Tenant-Id': String(tenant.id) }
+  const params = {}
+  if (startDate.value) params.start_date = startDate.value
+  if (endDate.value) params.end_date = endDate.value
 
-  let url = ''
-  const params = new URLSearchParams()
-  if (startDate.value) params.set('start_date', startDate.value)
-  if (endDate.value) params.set('end_date', endDate.value)
-
+  let path = ''
   if (tab.value === 'sales') {
-    url = '/api/reports/sales-summary'
-    params.set('period', period.value)
-    if (warehouseFilter.value) params.set('warehouse_id', warehouseFilter.value)
+    path = 'sales-summary'
+    params.period = period.value
+    if (warehouseFilter.value) params.warehouse_id = warehouseFilter.value
   } else if (tab.value === 'profit') {
-    url = '/api/reports/profit'
-    if (productFilter.value) params.set('product_id', productFilter.value)
+    path = 'profit'
+    if (productFilter.value) params.product_id = productFilter.value
   } else if (tab.value === 'purchase') {
-    url = '/api/reports/purchase-summary'
-    if (productFilter.value) params.set('product_id', productFilter.value)
+    path = 'purchase-summary'
+    if (productFilter.value) params.product_id = productFilter.value
   } else if (tab.value === 'turnover') {
-    url = '/api/reports/turnover'
-    if (warehouseFilter.value) params.set('warehouse_id', warehouseFilter.value)
+    path = 'turnover'
+    if (warehouseFilter.value) params.warehouse_id = warehouseFilter.value
   }
 
-  const res = await fetch(`${url}?${params}`, { headers })
-  const json = await res.json()
+  const json = await getReport(path, params)
   data.value = json.data
 }
 
