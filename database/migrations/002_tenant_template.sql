@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS sales_orders (
   customer_id INT NOT NULL,
   warehouse_id INT NOT NULL,
   total_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
-  status ENUM('draft', 'confirmed', 'cancelled') NOT NULL DEFAULT 'draft',
+  status ENUM('draft','confirmed','delivered','cancelled') NOT NULL DEFAULT 'draft',
   ordered_at DATE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP

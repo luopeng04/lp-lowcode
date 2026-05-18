@@ -11,6 +11,7 @@ const customerRoutes = require('./routes/customers')
 const productRoutes = require('./routes/products')
 const operatorRoutes = require('./routes/operators')
 const purchaseOrderRoutes = require('./routes/purchase-orders')
+const salesOrderRoutes = require('./routes/sales-orders')
 
 const app = express()
 
@@ -28,6 +29,7 @@ app.use(customerRoutes)
 app.use(productRoutes)
 app.use(operatorRoutes)
 app.use(purchaseOrderRoutes)
+app.use(salesOrderRoutes)
 app.use(routes)
 app.use(errorHandler)
 

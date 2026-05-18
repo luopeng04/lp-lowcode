@@ -145,3 +145,23 @@ export function confirmPurchaseOrder(id) {
 export function receivePurchaseOrder(id) {
   return request(`/purchase-orders/${id}/receive`, { method: 'PUT' })
 }
+
+// Sales orders
+export function getSalesOrders({ search, status, page = 1 } = {}) {
+  const params = new URLSearchParams({ page })
+  if (search) params.set('search', search)
+  if (status) params.set('status', status)
+  return request(`/sales-orders?${params}`)
+}
+export function getSalesOrder(id) {
+  return request(`/sales-orders/${id}`)
+}
+export function createSalesOrder(data) {
+  return request('/sales-orders', { method: 'POST', body: JSON.stringify(data) })
+}
+export function confirmSalesOrder(id) {
+  return request(`/sales-orders/${id}/confirm`, { method: 'PUT' })
+}
+export function deliverSalesOrder(id) {
+  return request(`/sales-orders/${id}/deliver`, { method: 'PUT' })
+}
