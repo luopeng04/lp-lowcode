@@ -1,8 +1,8 @@
 <template>
   <div class="page">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <div class="header">
       <h1>库存流水</h1>
-      <button class="btn-export" @click="exportCSV">导出 Excel</button>
+      <button class="btn-secondary" @click="exportCSV">导出 Excel</button>
     </div>
 
     <div class="toolbar">
@@ -22,8 +22,11 @@
         <option value="">全部商品</option>
         <option v-for="p in products" :key="p.id" :value="p.id">{{ p.name }}</option>
       </select>
+      <button class="btn-secondary" @click="fetchList">查询</button>
+      <button class="btn-reset" @click="startDate='';endDate='';warehouseFilter='';typeFilter='';productFilter='';fetchList()">重置</button>
     </div>
 
+    <div class="table-wrap">
     <table>
       <thead>
         <tr><th>时间</th><th>商品</th><th>仓库</th><th>方向</th><th>数量</th><th>成本价</th><th>关联单据</th></tr>
@@ -39,6 +42,7 @@
         <tr v-if="list.length === 0"><td colspan="7" class="empty">暂无数据</td></tr>
       </tbody>
     </table>
+    </div>
 
     <div class="pager" v-if="total > pageSize">
       <button :disabled="page <= 1" @click="page--; fetchList()">上一页</button>
@@ -95,8 +99,7 @@ onMounted(async () => { await loadMeta(); await fetchList() })
 </script>
 
 <style scoped>
-.toolbar { flex-wrap: wrap; font-size: 13px; }
-.in { color: #16a34a; font-weight: 600; }
-.out { color: #d32; font-weight: 600; }
-.btn-export { padding: 7px 16px; background: #16a34a; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
+.toolbar { flex-wrap: wrap; font-size: var(--font-size-base); }
+.in { color: var(--color-success); font-weight: var(--font-weight-semibold); }
+.out { color: var(--color-danger); font-weight: var(--font-weight-semibold); }
 </style>

@@ -1,12 +1,12 @@
 <template>
   <div class="page">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <div class="header">
       <h1>库存查询</h1>
       <button class="btn-secondary" @click="exportCSV">导出 Excel</button>
     </div>
 
     <div class="toolbar">
-      <input v-model="search" @input="onSearch" placeholder="搜索商品..." class="search" />
+      <input v-model="search" @input="onSearch" @keyup.enter="fetchList" placeholder="搜索商品..." class="search" />
       <select v-model="warehouseFilter" @change="onSearch">
         <option value="">全部仓库</option>
         <option v-for="w in warehouses" :key="w.id" :value="w.id">{{ w.name }}</option>
@@ -15,8 +15,11 @@
         <option value="">全部分类</option>
         <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
       </select>
+      <button class="btn-secondary" @click="fetchList">查询</button>
+      <button class="btn-reset" @click="search='';warehouseFilter='';categoryFilter='';fetchList()">重置</button>
     </div>
 
+    <div class="table-wrap">
     <table>
       <thead>
         <tr><th>商品</th><th>编码</th><th>仓库</th><th>分类</th><th>数量</th><th>安全库存</th><th>均价</th><th>金额</th><th>操作</th></tr>
@@ -33,6 +36,7 @@
         <tr v-if="list.length === 0"><td colspan="9" class="empty">暂无数据</td></tr>
       </tbody>
     </table>
+    </div>
 
     <!-- Safety stock modal -->
     <div class="modal-overlay" v-if="showSafety" @click.self="closeSafety">
@@ -51,15 +55,15 @@
     </div>
 
     <!-- Stock check -->
-    <div v-if="canWrite()" class="card" style="margin-top:24px">
+    <div v-if="canWrite()" class="card">
       <h2>库存盘点</h2>
-      <select v-model="checkWarehouse" style="width:200px;display:block;margin-bottom:12px">
+      <select v-model="checkWarehouse" class="check-select">
         <option value="">选择仓库</option>
         <option v-for="w in warehouses" :key="w.id" :value="w.id">{{ w.name }}</option>
       </select>
       <button class="btn-secondary" @click="loadCheckItems">加载商品</button>
 
-      <table v-if="checkItems.length > 0" style="margin-top:12px">
+      <table v-if="checkItems.length > 0" class="check-table">
         <thead><tr><th>商品</th><th>账面数量</th><th>实盘数量</th><th>差异</th></tr></thead>
         <tbody>
           <tr v-for="(item, idx) in checkItems" :key="idx">
@@ -70,7 +74,7 @@
           </tr>
         </tbody>
       </table>
-      <button v-if="checkItems.length > 0" class="btn-primary" @click="submitCheck" style="margin-top:12px">保存盘点结果</button>
+      <button v-if="checkItems.length > 0" class="btn-primary check-submit" @click="submitCheck">保存盘点结果</button>
       <p v-if="checkResult" class="success">{{ checkResult }}</p>
     </div>
   </div>
@@ -152,13 +156,16 @@ onMounted(async () => { await loadMeta(); await fetchList() })
 </script>
 
 <style scoped>
-h2 { font-size: 16px; margin-bottom: 12px; }
-.warn { background: #fff3cd; }
-.low { color: #d32; font-weight: 700; }
-.diff { color: #d32; font-weight: 700; }
-.card { background: #fff; border-radius: 8px; padding: 24px; }
+h2 { font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); margin-bottom: 12px; }
+.warn { background: var(--color-warning-light); }
+.low { color: var(--color-danger); font-weight: var(--font-weight-bold); }
+.diff { color: var(--color-danger); font-weight: var(--font-weight-bold); }
+.card { background: var(--bg-surface); border-radius: var(--radius-md); padding: var(--space-lg); margin-top: var(--space-lg); border: 1px solid var(--border-default); }
+.check-select { width: 200px; display: block; margin-bottom: 12px; }
+.check-table { margin-top: 12px; }
+.check-submit { margin-top: 12px; }
 .modal { width: 380px; }
 .modal input { margin-bottom: 10px; }
 .modal-actions { margin-top: 8px; }
-.success { color: #16a34a; font-size: 14px; margin-top: 8px; }
+.success { color: var(--color-success); font-size: var(--font-size-md); margin-top: var(--space-sm); }
 </style>

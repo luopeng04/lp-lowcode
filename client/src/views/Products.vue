@@ -9,13 +9,16 @@
     </div>
 
     <div class="toolbar">
-      <input v-model="search" @input="onSearch" placeholder="搜索名称/编码..." class="search" />
+      <input v-model="search" @input="onSearch" @keyup.enter="fetchList" placeholder="搜索名称/编码..." class="search" />
       <select v-model="categoryFilter" @change="onSearch" class="filter">
         <option value="">全部分类</option>
         <option v-for="c in categories" :key="c.name" :value="c.name">{{ c.name }}</option>
       </select>
+      <button class="btn-secondary" @click="fetchList">查询</button>
+      <button class="btn-reset" @click="search='';categoryFilter='';fetchList()">重置</button>
     </div>
 
+    <div class="table-wrap">
     <table>
       <thead>
         <tr>
@@ -41,6 +44,7 @@
         <tr v-if="list.length === 0"><td :colspan="8 + customFields.length" class="empty">暂无数据</td></tr>
       </tbody>
     </table>
+    </div>
 
     <div class="pager" v-if="total > pageSize">
       <button :disabled="page <= 1" @click="page--; fetchList()">上一页</button>
@@ -236,10 +240,10 @@ onMounted(async () => { await loadMeta(); await fetchList() })
 
 <style scoped>
 .header-actions { display: flex; gap: 10px; }
-.required { color: #d32; }
+.required { color: var(--color-danger); }
 .field-list { list-style: none; padding: 0; }
-.field-list li { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #eee; font-size: 14px; }
-.field-list li small { color: #999; }
-.hint { color: #999; font-size: 13px; margin-bottom: 10px; }
-hr { border: none; border-top: 1px solid #eee; margin: 12px 0; }
+.field-list li { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border-light); font-size: var(--font-size-md); }
+.field-list li small { color: var(--text-muted); }
+.hint { color: var(--text-muted); font-size: var(--font-size-base); margin-bottom: 10px; }
+hr { border: none; border-top: 1px solid var(--border-light); margin: 12px 0; }
 </style>

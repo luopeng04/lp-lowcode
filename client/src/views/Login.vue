@@ -64,27 +64,34 @@ async function handleLogin() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f6fa;
+  background: var(--bg-page);
 }
 .card {
-  background: #fff;
-  padding: 32px;
-  border-radius: 8px;
+  background: var(--bg-surface);
+  padding: var(--space-xl);
+  border-radius: var(--radius-lg);
   width: 360px;
-  box-shadow: 0 2px 12px rgba(0,0,0,.08);
+  border: 1px solid var(--border-default);
 }
-h1 { font-size: 20px; margin-bottom: 20px; }
-label { display: block; font-size: 13px; color: #555; margin: 12px 0 4px; }
+h1 { font-size: var(--font-size-2xl); font-weight: var(--font-weight-semibold); margin-bottom: var(--space-lg); }
+label { display: block; font-size: var(--font-size-base); color: var(--text-secondary); margin: 12px 0 4px; font-weight: var(--font-weight-medium); }
 input {
-  width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px;
-  font-size: 14px; box-sizing: border-box;
+  width: 100%; padding: 8px 12px; border: 1px solid var(--border-default); border-radius: var(--radius-sm);
+  font-size: var(--font-size-md); box-sizing: border-box; font-family: var(--font-family);
+  transition: border-color var(--transition-fast);
 }
+input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 2px var(--color-primary-light); }
 button {
-  width: 100%; margin-top: 20px; padding: 10px; background: #1a56db;
-  color: #fff; border: none; border-radius: 4px; font-size: 15px; cursor: pointer;
+  width: 100%; margin-top: 20px; padding: 10px; background: var(--color-primary);
+  color: #fff; border: none; border-radius: var(--radius-sm); font-size: 15px; cursor: pointer;
+  font-family: var(--font-family); font-weight: var(--font-weight-medium);
+  transition: background var(--transition-fast);
 }
+button:hover { background: var(--color-primary-hover); }
+button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 button:disabled { opacity: .6; cursor: not-allowed; }
-.error { color: #d32; font-size: 13px; margin-top: 12px; }
-.switch { margin-top: 16px; font-size: 13px; color: #888; text-align: center; }
-.toggle-user { color: #1a56db; cursor: pointer; font-size: 12px; margin-top: 0 !important; user-select: none; }
+.error { color: var(--color-danger); font-size: var(--font-size-base); margin-top: 12px; }
+.switch { margin-top: var(--space-md); font-size: var(--font-size-base); color: var(--text-muted); text-align: center; }
+.switch a { color: var(--color-primary); text-decoration: none; }
+.toggle-user { color: var(--color-primary); cursor: pointer; font-size: var(--font-size-sm); margin-top: 0 !important; user-select: none; }
 </style>

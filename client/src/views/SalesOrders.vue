@@ -6,7 +6,7 @@
     </div>
 
     <div class="toolbar">
-      <input v-model="search" @input="onSearch" placeholder="搜索单号/客户..." class="search" />
+      <input v-model="search" @input="onSearch" @keyup.enter="fetchList" placeholder="搜索单号/客户..." class="search" />
       <select v-model="statusFilter" @change="onSearch" class="filter">
         <option value="">全部状态</option>
         <option value="draft">草稿</option>
@@ -14,8 +14,11 @@
         <option value="delivered">已出库</option>
         <option value="cancelled">已取消</option>
       </select>
+      <button class="btn-secondary" @click="fetchList">查询</button>
+      <button class="btn-reset" @click="search='';statusFilter='';fetchList()">重置</button>
     </div>
 
+    <div class="table-wrap">
     <table>
       <thead>
         <tr><th>单号</th><th>客户</th><th>仓库</th><th>金额</th><th>状态</th><th>日期</th><th>操作</th></tr>
@@ -29,12 +32,13 @@
           <td>{{ so.ordered_at || so.created_at?.slice(0,10) }}</td>
           <td v-if="canWrite()">
             <button v-if="so.status === 'draft'" @click="handleConfirm(so)">审核</button>
-            <button v-if="so.status === 'confirmed'" class="btn-deliver" @click="handleDeliver(so)">出库</button>
+            <button v-if="so.status === 'confirmed'" class="btn-success" @click="handleDeliver(so)">出库</button>
           </td>
         </tr>
         <tr v-if="list.length === 0"><td colspan="7" class="empty">暂无数据</td></tr>
       </tbody>
     </table>
+    </div>
 
     <div class="pager" v-if="total > pageSize">
       <button :disabled="page <= 1" @click="page--; fetchList()">上一页</button>
@@ -168,10 +172,11 @@ onMounted(async () => { await loadMeta(); await fetchList() })
 </script>
 
 <style scoped>
-.btn-deliver { padding: 4px 10px; background: #16a34a; color: #fff; border: none; border-radius: 3px; cursor: pointer; font-size: 12px; }
-td a { color: #1a56db; text-decoration: none; }
-.status-draft { color: #888; }
-.status-confirmed { color: #1a56db; }
-.status-delivered { color: #16a34a; }
-.status-cancelled { color: #d32; }
+.btn-success { padding: 4px 10px; font-size: var(--font-size-sm); }
+td a { color: var(--color-primary); text-decoration: none; }
+td a:hover { text-decoration: underline; }
+.status-draft { color: var(--color-draft); background: none; padding: 0; }
+.status-confirmed { color: var(--color-info); background: none; padding: 0; }
+.status-delivered { color: var(--color-success); background: none; padding: 0; }
+.status-cancelled { color: var(--color-danger); background: none; padding: 0; }
 </style>

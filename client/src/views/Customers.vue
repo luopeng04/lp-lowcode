@@ -5,8 +5,13 @@
       <button v-if="canWrite()" class="btn-primary" @click="openCreate">+ 新建客户</button>
     </div>
 
-    <input v-model="search" @input="onSearch" placeholder="搜索名称/编码/联系人..." class="search" />
+    <div class="toolbar">
+      <input v-model="search" @input="onSearch" @keyup.enter="fetchList" placeholder="搜索名称/编码/联系人..." class="search" />
+      <button class="btn-secondary" @click="fetchList">查询</button>
+      <button class="btn-reset" @click="search='';fetchList()">重置</button>
+    </div>
 
+    <div class="table-wrap">
     <table>
       <thead>
         <tr><th>编码</th><th>名称</th><th>联系人</th><th>电话</th><th>地址</th><th>备注</th><th>操作</th></tr>
@@ -23,6 +28,7 @@
         <tr v-if="list.length === 0"><td colspan="7" class="empty">暂无数据</td></tr>
       </tbody>
     </table>
+    </div>
 
     <div class="pager" v-if="total > pageSize">
       <button :disabled="page <= 1" @click="page--; fetchList()">上一页</button>
@@ -114,7 +120,6 @@ onMounted(fetchList)
 </script>
 
 <style scoped>
-.search { margin-bottom: 12px; }
 .modal { width: 420px; }
 .modal input { margin-bottom: 8px; }
 .modal-actions { margin-top: 8px; }

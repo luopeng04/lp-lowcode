@@ -60,7 +60,6 @@ function logout() {
 
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
 
 .app-shell {
   display: flex;
@@ -68,45 +67,66 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
 }
 
 .sidebar {
-  width: 220px;
-  background: #1a1a2e;
-  color: #eee;
-  padding: 20px;
+  width: var(--sidebar-width);
+  background: var(--bg-sidebar);
+  color: var(--text-on-dark);
+  padding: var(--space-lg);
   display: flex;
   flex-direction: column;
 }
 
 .sidebar .logo {
-  font-size: 16px;
-  font-weight: 700;
-  margin-bottom: 24px;
-  color: #fff;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-lg);
+  color: var(--text-on-dark-active);
 }
 
 .sidebar nav a {
   display: block;
-  color: #aab;
+  color: var(--text-on-dark-muted);
   text-decoration: none;
-  padding: 8px 0;
-  font-size: 14px;
+  padding: 8px 12px;
+  margin: 2px -8px;
+  font-size: var(--font-size-md);
+  transition: all var(--transition-fast);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid transparent;
 }
 
-.sidebar nav a:hover,
-.sidebar nav a.router-link-active {
-  color: #fff;
+.sidebar nav a:hover {
+  color: var(--text-on-dark-active);
+  background: var(--bg-sidebar-hover);
+}
+
+.sidebar nav a.router-link-exact-active {
+  color: var(--text-on-dark-active);
+  background: var(--bg-sidebar-hover);
+  border-left-color: var(--color-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.sidebar nav a.router-link-active:not(.router-link-exact-active) {
+  color: var(--text-on-dark-active);
+}
+
+.sidebar nav a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
 }
 
 .sidebar .tenant-info {
-  font-size: 13px; color: #8af; margin-bottom: 16px;
-  padding: 8px 10px; background: rgba(255,255,255,.08); border-radius: 4px;
+  font-size: var(--font-size-base); color: var(--color-primary-light); margin-bottom: var(--space-md);
+  padding: 8px 10px; background: var(--bg-sidebar-hover); border-radius: var(--radius-sm);
 }
 .sidebar .bottom {
-  margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.1);
+  margin-top: auto; padding-top: var(--space-lg); border-top: 1px solid rgba(255,255,255,.1);
 }
-.sidebar .bottom a { color: #aab; text-decoration: none; font-size: 13px; cursor: pointer; }
+.sidebar .bottom a { color: var(--text-on-dark-muted); text-decoration: none; font-size: var(--font-size-base); cursor: pointer; transition: color var(--transition-fast); }
+.sidebar .bottom a:hover { color: var(--text-on-dark-active); }
 .main {
   flex: 1;
-  padding: 24px;
-  background: #f5f6fa;
+  padding: var(--space-lg);
+  background: var(--bg-page);
 }
 </style>

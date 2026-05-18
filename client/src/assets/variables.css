@@ -1,0 +1,90 @@
+/* === Design Tokens — lp 进销存 === */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Typography */
+  --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 13px;
+  --font-size-md: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 20px;
+  --font-size-3xl: 24px;
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+
+  /* Colors — Brand */
+  --color-primary: #0891B2;
+  --color-primary-hover: #0E7490;
+  --color-primary-light: #ECFEFF;
+
+  /* Colors — Semantic */
+  --color-success: #059669;
+  --color-success-hover: #047857;
+  --color-success-light: #D1FAE5;
+  --color-danger: #DC2626;
+  --color-danger-hover: #B91C1C;
+  --color-danger-light: #FEE2E2;
+  --color-warning: #D97706;
+  --color-warning-light: #FEF3C7;
+  --color-info: #6366F1;
+  --color-info-light: #E0E7FF;
+  --color-draft: #78716C;
+  --color-draft-light: #F5F5F4;
+
+  /* Colors — Neutral */
+  --bg-page: #F1F5F9;
+  --bg-surface: #FFFFFF;
+  --bg-sidebar: #0F172A;
+  --bg-sidebar-hover: rgba(255, 255, 255, 0.08);
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #94A3B8;
+  --text-on-dark: #CBD5E1;
+  --text-on-dark-muted: #64748B;
+  --text-on-dark-active: #FFFFFF;
+  --border-default: #E2E8F0;
+  --border-light: #F1F5F9;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 200ms ease;
+
+  /* Z-Index */
+  --z-dropdown: 50;
+  --z-modal: 100;
+  --z-confirm: 200;
+
+  /* Sidebar */
+  --sidebar-width: 220px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 0ms;
+    --transition-normal: 0ms;
+  }
+}

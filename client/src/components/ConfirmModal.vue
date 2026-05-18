@@ -16,10 +16,12 @@ defineEmits(['confirm', 'cancel'])
 </script>
 
 <style scoped>
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.3); display: flex; align-items: center; justify-content: center; z-index: 200; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.3); display: flex; align-items: center; justify-content: center; z-index: var(--z-confirm); }
 .modal-sm { width: 360px; text-align: center; }
-.msg { font-size: 15px; margin-bottom: 20px; color: #333; }
+.msg { font-size: 15px; margin-bottom: var(--space-lg); color: var(--text-primary); }
 .modal-actions { display: flex; justify-content: center; gap: 12px; }
-.modal-actions button { padding: 8px 28px; font-size: 14px; border: 1px solid #ddd; border-radius: 4px; background: #fff; cursor: pointer; }
-.btn-danger-fill { background: #d32 !important; color: #fff !important; border-color: #d32 !important; }
+.modal-actions button { padding: 8px 28px; font-size: var(--font-size-md); border: 1px solid var(--border-default); border-radius: var(--radius-sm); background: var(--bg-surface); cursor: pointer; font-family: var(--font-family); transition: border-color var(--transition-fast); }
+.modal-actions button:hover { border-color: var(--text-muted); }
+.btn-danger-fill { background: var(--color-danger) !important; color: #fff !important; border-color: var(--color-danger) !important; }
+.btn-danger-fill:hover { background: var(--color-danger-hover) !important; }
 </style>

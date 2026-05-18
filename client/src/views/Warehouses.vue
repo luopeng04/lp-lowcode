@@ -11,6 +11,7 @@
       <button class="btn-reset" @click="search='';fetchList()">重置</button>
     </div>
 
+    <div class="table-wrap">
     <table>
       <thead>
         <tr>
@@ -34,6 +35,7 @@
         </tr>
       </tbody>
     </table>
+    </div>
 
     <!-- Modal -->
     <div class="modal-overlay" v-if="showModal" @click.self="closeModal">
@@ -140,8 +142,7 @@ onMounted(fetchList)
 </script>
 
 <style scoped>
-.search { margin-bottom: 12px; }
-th, td { padding: 10px 14px; font-size: 14px; }
+th, td { padding: 10px 14px; font-size: var(--font-size-md); }
 .modal { width: 400px; }
 .modal input { margin-bottom: 10px; }
 .modal-actions { margin-top: 8px; }

@@ -28,7 +28,7 @@
 
       <div v-if="canWrite()" class="actions">
         <button v-if="order.status === 'draft'" class="btn-primary" @click="handleConfirm">审核通过</button>
-        <button v-if="order.status === 'confirmed'" class="btn-deliver" @click="handleDeliver">确认出库</button>
+        <button v-if="order.status === 'confirmed'" class="btn-success" @click="handleDeliver">确认出库</button>
       </div>
     </div>
 
@@ -73,29 +73,26 @@ onMounted(load)
 </script>
 
 <style scoped>
-.back { color: #1a56db; text-decoration: none; font-size: 13px; display: inline-block; margin-bottom: 12px; }
-.card { background: #fff; border-radius: 8px; padding: 24px; }
-.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-h1 { font-size: 20px; }
-h3 { font-size: 14px; margin: 20px 0 8px; }
-.status-draft { padding: 4px 10px; border-radius: 12px; font-size: 12px; background: #eee; color: #888; }
-.status-confirmed { padding: 4px 10px; border-radius: 12px; font-size: 12px; background: #e0e7ff; color: #1a56db; }
-.status-delivered { padding: 4px 10px; border-radius: 12px; font-size: 12px; background: #dcfce7; color: #16a34a; }
+.back { color: var(--color-primary); text-decoration: none; font-size: var(--font-size-base); display: inline-block; margin-bottom: 12px; }
+.back:hover { text-decoration: underline; }
+.card { background: var(--bg-surface); border-radius: var(--radius-md); padding: var(--space-lg); border: 1px solid var(--border-default); }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg); }
+h1 { font-size: var(--font-size-2xl); font-weight: var(--font-weight-semibold); }
+h3 { font-size: var(--font-size-md); font-weight: var(--font-weight-semibold); margin: var(--space-lg) 0 var(--space-sm); }
 .info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.info label { font-size: 12px; color: #888; display: block; }
+.info label { font-size: var(--font-size-sm); color: var(--text-muted); display: block; }
 .info span { font-size: 15px; }
-.amount { color: #d32; font-weight: 600; }
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 8px 12px; text-align: left; font-size: 13px; border-bottom: 1px solid #eee; }
-th { background: #f7f8fa; color: #555; }
-.actions { margin-top: 24px; display: flex; gap: 10px; }
-.btn-primary { padding: 8px 24px; background: #1a56db; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
-.btn-deliver { padding: 8px 24px; background: #16a34a; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+.amount { color: var(--color-danger); font-weight: var(--font-weight-semibold); }
+.actions { margin-top: var(--space-lg); display: flex; gap: 10px; }
+.btn-primary { padding: 8px 24px; background: var(--color-primary); color: #fff; border: none; border-radius: var(--radius-sm); cursor: pointer; font-size: var(--font-size-md); font-family: var(--font-family); transition: background var(--transition-fast); }
+.btn-primary:hover { background: var(--color-primary-hover); }
+.btn-success { padding: 8px 24px; background: var(--color-success); color: #fff; border: none; border-radius: var(--radius-sm); cursor: pointer; font-size: var(--font-size-md); font-family: var(--font-family); transition: background var(--transition-fast); }
+.btn-success:hover { background: var(--color-success-hover); }
 
 @media print {
   .sidebar, .actions, .back, .bottom { display: none !important; }
   .main { padding: 0 !important; background: #fff !important; }
-  .card { box-shadow: none; padding: 0; }
+  .card { border: none; padding: 0; }
   .header h1 { font-size: 22px; }
   .info label { color: #555; }
   table th { background: #eee; -webkit-print-color-adjust: exact; print-color-adjust: exact; }

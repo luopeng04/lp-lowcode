@@ -5,6 +5,7 @@
       <button class="btn-primary" @click="openCreate">+ 新建操作员</button>
     </div>
 
+    <div class="table-wrap">
     <table>
       <thead>
         <tr><th>用户名</th><th>显示名称</th><th>角色</th><th>状态</th><th>创建时间</th><th>操作</th></tr>
@@ -25,6 +26,7 @@
         </tr>
       </tbody>
     </table>
+    </div>
 
     <!-- Create/Edit modal -->
     <div class="modal-overlay" v-if="showModal" @click.self="closeModal">
@@ -148,8 +150,9 @@ onMounted(fetchList)
 </script>
 
 <style scoped>
-.disabled { color: #d32; }
-.btn-warn { color: #d32; border-color: #ecc; }
+.disabled { color: var(--color-danger); }
+.btn-warn { color: var(--color-warning); border-color: var(--color-warning-light); padding: 4px 10px; font-size: var(--font-size-sm); border-radius: var(--radius-sm); background: var(--bg-surface); cursor: pointer; transition: background var(--transition-fast); }
+.btn-warn:hover { background: var(--color-warning-light); }
 .modal { width: 400px; }
 .modal input, .modal select { margin-bottom: 10px; }
 .modal-actions { margin-top: 8px; }

@@ -7,10 +7,10 @@
     </div>
 
     <!-- Filters -->
-    <div class="filters">
-      <input v-model="startDate" @change="load" type="date" />
+    <div class="toolbar">
+      <input v-model="startDate" @change="load" type="date" class="filter" />
       <span>至</span>
-      <input v-model="endDate" @change="load" type="date" />
+      <input v-model="endDate" @change="load" type="date" class="filter" />
       <select v-model="period" @change="load" v-if="tab === 'sales'">
         <option value="day">按日</option>
         <option value="week">按周</option>
@@ -24,12 +24,13 @@
         <option value="">全部商品</option>
         <option v-for="p in products" :key="p.id" :value="p.id">{{ p.name }}</option>
       </select>
-      <button class="btn-primary" @click="load" style="margin-left:8px">查询</button>
+      <button class="btn-secondary" @click="load">查询</button>
+      <button class="btn-reset" @click="startDate='';endDate='';warehouseFilter='';productFilter='';load()">重置</button>
     </div>
 
     <!-- Sales Summary -->
     <div v-if="tab === 'sales'">
-      <table>
+      <div class="table-wrap"><table>
         <thead><tr><th>周期</th><th>订单数</th><th>销售数量</th><th>销售金额</th></tr></thead>
         <tbody>
           <tr v-for="r in data" :key="r.period">
@@ -37,7 +38,7 @@
           </tr>
           <tr v-if="data.length === 0"><td colspan="4" class="empty">暂无数据</td></tr>
         </tbody>
-      </table>
+      </table></div>
       <!-- Bar chart -->
       <div class="chart" v-if="data.length > 0">
         <div v-for="r in data" :key="r.period" class="bar-row">
@@ -50,7 +51,7 @@
 
     <!-- Profit Analysis -->
     <div v-if="tab === 'profit'">
-      <table>
+      <div class="table-wrap"><table>
         <thead><tr><th>商品</th><th>销量</th><th>收入</th><th>成本</th><th>毛利</th><th>利润率</th></tr></thead>
         <tbody>
           <tr v-for="r in data" :key="r.product_code">
@@ -60,7 +61,7 @@
           </tr>
           <tr v-if="data.length === 0"><td colspan="6" class="empty">暂无数据</td></tr>
         </tbody>
-      </table>
+      </table></div>
       <!-- Bar chart -->
       <div class="chart" v-if="data.length > 0">
         <div v-for="r in data" :key="r.product_code" class="bar-row">
@@ -73,7 +74,7 @@
 
     <!-- Purchase Summary -->
     <div v-if="tab === 'purchase'">
-      <table>
+      <div class="table-wrap"><table>
         <thead><tr><th>供应商</th><th>商品</th><th>订单数</th><th>采购数量</th><th>采购金额</th></tr></thead>
         <tbody>
           <tr v-for="r in data" :key="r.supplier_name + r.product_name">
@@ -81,12 +82,12 @@
           </tr>
           <tr v-if="data.length === 0"><td colspan="5" class="empty">暂无数据</td></tr>
         </tbody>
-      </table>
+      </table></div>
     </div>
 
     <!-- Turnover -->
     <div v-if="tab === 'turnover'">
-      <table>
+      <div class="table-wrap"><table>
         <thead><tr><th>商品</th><th>仓库</th><th>入库总量</th><th>出库总量</th><th>操作次数</th></tr></thead>
         <tbody>
           <tr v-for="r in data" :key="r.product_name + r.warehouse_name">
@@ -94,7 +95,7 @@
           </tr>
           <tr v-if="data.length === 0"><td colspan="5" class="empty">暂无数据</td></tr>
         </tbody>
-      </table>
+      </table></div>
     </div>
   </div>
 </template>
@@ -161,17 +162,16 @@ onMounted(async () => {
 
 <style scoped>
 .tabs { display: flex; gap: 4px; margin-bottom: 12px; }
-.tabs button { padding: 7px 16px; border: 1px solid #ddd; background: #fff; cursor: pointer; font-size: 13px; border-radius: 4px; }
-.tabs button.active { background: #1a56db; color: #fff; border-color: #1a56db; }
-.filters { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; font-size: 13px; }
-.filters input, .filters select { padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
-table { margin-bottom: 20px; }
-.green { color: #16a34a; font-weight: 600; }
-.red { color: #d32; font-weight: 600; }
-.chart { margin-top: 8px; }
+.tabs button { padding: 7px 16px; border: 1px solid var(--border-default); background: var(--bg-surface); cursor: pointer; font-size: var(--font-size-base); border-radius: var(--radius-sm); font-family: var(--font-family); transition: all var(--transition-fast); }
+.tabs button:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.tabs button.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+.table-wrap { margin-bottom: var(--space-lg); }
+.green { color: var(--color-success); font-weight: var(--font-weight-semibold); }
+.red { color: var(--color-danger); font-weight: var(--font-weight-semibold); }
+.chart { margin-top: var(--space-sm); }
 .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-.bar-label { width: 80px; font-size: 12px; text-align: right; color: #555; flex-shrink: 0; }
-.bar { height: 18px; background: #1a56db; border-radius: 3px; min-width: 2px; transition: width .3s; }
-.bar.profit { background: #16a34a; }
-.bar-val { font-size: 12px; color: #555; width: 80px; flex-shrink: 0; }
+.bar-label { width: 80px; font-size: var(--font-size-sm); text-align: right; color: var(--text-secondary); flex-shrink: 0; }
+.bar { height: 18px; background: var(--color-primary); border-radius: 3px; min-width: 2px; transition: width .3s; }
+.bar.profit { background: var(--color-success); }
+.bar-val { font-size: var(--font-size-sm); color: var(--text-secondary); width: 80px; flex-shrink: 0; }
 </style>

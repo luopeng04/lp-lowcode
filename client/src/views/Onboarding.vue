@@ -30,31 +30,35 @@ function goHome() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f6fa;
+  background: var(--bg-page);
 }
 .card {
-  background: #fff;
-  padding: 40px 32px;
-  border-radius: 8px;
+  background: var(--bg-surface);
+  padding: 40px var(--space-xl);
+  border-radius: var(--radius-lg);
   width: 400px;
   text-align: center;
-  box-shadow: 0 2px 12px rgba(0,0,0,.08);
+  border: 1px solid var(--border-default);
 }
 .checkmark {
   width: 56px; height: 56px; border-radius: 50%;
-  background: #16a34a; color: #fff; font-size: 28px;
+  background: var(--color-success); color: #fff; font-size: 28px;
   display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 16px;
+  margin: 0 auto var(--space-md);
 }
-h1 { font-size: 22px; margin-bottom: 8px; }
-p { color: #666; font-size: 14px; margin-bottom: 16px; }
+h1 { font-size: 22px; font-weight: var(--font-weight-semibold); margin-bottom: var(--space-sm); }
+p { color: var(--text-secondary); font-size: var(--font-size-md); margin-bottom: var(--space-md); }
 ul {
-  text-align: left; margin: 0 auto 24px; padding: 0;
-  list-style: none; font-size: 14px; color: #555; max-width: 220px;
+  text-align: left; margin: 0 auto var(--space-lg); padding: 0;
+  list-style: none; font-size: var(--font-size-md); color: var(--text-secondary); max-width: 220px;
 }
-li::before { content: '• '; color: #16a34a; }
+li::before { content: '• '; color: var(--color-success); }
 button {
-  padding: 10px 48px; background: #1a56db; color: #fff;
-  border: none; border-radius: 4px; font-size: 15px; cursor: pointer;
+  padding: 10px 48px; background: var(--color-primary); color: #fff;
+  border: none; border-radius: var(--radius-sm); font-size: 15px; cursor: pointer;
+  font-family: var(--font-family); font-weight: var(--font-weight-medium);
+  transition: background var(--transition-fast);
 }
+button:hover { background: var(--color-primary-hover); }
+button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 </style>
