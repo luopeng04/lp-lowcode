@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <h1>lp 低代码开发平台</h1>
+    <h1>lp 进销存</h1>
     <p>项目骨架已就绪。前后端分离，SaaS 多租户架构。</p>
     <p class="hint">请继续实现业务功能。</p>
   </div>

@@ -1,7 +1,7 @@
 <template>
   <div class="app-shell">
     <aside class="sidebar">
-      <div class="logo">lp 低代码平台</div>
+      <div class="logo">lp 进销存</div>
       <div class="tenant-info" v-if="tenant">
         <span>{{ tenant.name }}</span>
         <small>{{ roleLabel }}</small>

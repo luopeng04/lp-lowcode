@@ -109,7 +109,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
-  document.title = (to.meta.title ? `${to.meta.title} - ` : '') + 'lp 低代码平台'
+  document.title = (to.meta.title ? `${to.meta.title} - ` : '') + 'lp 进销存'
 
   if (to.meta.requiresAuth) {
     const tenant = localStorage.getItem('tenant')
