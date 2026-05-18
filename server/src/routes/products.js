@@ -1,10 +1,17 @@
 const { Router } = require('express')
 const { getTenantPool } = require('../config/database')
+const { requireRole } = require('../middleware/operator')
 
 const router = Router()
 
 router.use((req, res, next) => {
   if (!req.tenant) return res.status(400).json({ error: '未提供租户标识' })
+  next()
+})
+
+const writeGuard = requireRole('admin', 'operator')
+router.use((req, res, next) => {
+  if (['POST', 'PUT', 'DELETE'].includes(req.method)) return writeGuard(req, res, next)
   next()
 })
 

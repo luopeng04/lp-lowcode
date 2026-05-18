@@ -2,8 +2,10 @@ const BASE = '/api'
 
 async function request(path, options = {}) {
   const tenant = JSON.parse(localStorage.getItem('tenant') || 'null')
+  const operator = JSON.parse(localStorage.getItem('operator') || 'null')
   const headers = { 'Content-Type': 'application/json', ...options.headers }
   if (tenant) headers['X-Tenant-Id'] = String(tenant.id)
+  if (operator) headers['X-Operator-Id'] = String(operator.id)
 
   const res = await fetch(`${BASE}${path}`, { headers, ...options })
   const data = await res.json()
@@ -19,10 +21,10 @@ export function register(phone, password, name) {
   })
 }
 
-export function login(phone, password) {
+export function login(phone, password, username) {
   return request('/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ phone, password }),
+    body: JSON.stringify({ phone, password, username }),
   })
 }
 
@@ -108,4 +110,18 @@ export function createCustomField(data) {
 }
 export function deleteCustomField(id) {
   return request(`/custom-fields/${id}`, { method: 'DELETE' })
+}
+
+// Operators
+export function getOperators() {
+  return request('/operators')
+}
+export function createOperator(data) {
+  return request('/operators', { method: 'POST', body: JSON.stringify(data) })
+}
+export function updateOperator(id, data) {
+  return request(`/operators/${id}`, { method: 'PUT', body: JSON.stringify(data) })
+}
+export function resetPassword(id, password) {
+  return request(`/operators/${id}/reset-password`, { method: 'PUT', body: JSON.stringify({ password }) })
 }

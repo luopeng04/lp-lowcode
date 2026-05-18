@@ -68,7 +68,7 @@ router.post('/api/auth/register', async (req, res) => {
 // POST /api/auth/login
 router.post('/api/auth/login', async (req, res) => {
   try {
-    const { phone, password } = req.body
+    const { phone, password, username } = req.body
 
     if (!phone || !password) {
       return res.status(400).json({ error: '手机号和密码不能为空' })
@@ -91,9 +91,11 @@ router.post('/api/auth/login', async (req, res) => {
     }
 
     const tenantPool = getTenantPool(tenant.db_name)
+    // If username provided, use it; otherwise use phone (admin login)
+    const operatorUsername = username || phone
     const [operators] = await tenantPool.query(
-      'SELECT id, username, password_hash, display_name, role FROM operators WHERE username = ? AND role = ?',
-      [phone, 'admin']
+      'SELECT id, username, password_hash, display_name, role FROM operators WHERE username = ? AND status = 1',
+      [operatorUsername]
     )
 
     if (operators.length === 0) {

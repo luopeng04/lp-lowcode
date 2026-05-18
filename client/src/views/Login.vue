@@ -3,11 +3,18 @@
     <div class="card">
       <h1>登录</h1>
       <form @submit.prevent="handleLogin">
-        <label>手机号</label>
-        <input v-model="phone" placeholder="请输入手机号" />
+        <label>手机号（商户号）</label>
+        <input v-model="phone" placeholder="请输入商户手机号" />
+
+        <label v-if="showUsername">操作员用户名</label>
+        <input v-if="showUsername" v-model="username" placeholder="管理员留空" />
 
         <label>密码</label>
         <input v-model="password" type="password" placeholder="请输入密码" />
+
+        <label class="toggle-user" @click="showUsername = !showUsername">
+          {{ showUsername ? '管理员登录' : '操作员登录' }}
+        </label>
 
         <p v-if="error" class="error">{{ error }}</p>
 
@@ -29,7 +36,9 @@ import { login } from '../api.js'
 
 const router = useRouter()
 const phone = ref('')
+const username = ref('')
 const password = ref('')
+const showUsername = ref(false)
 const error = ref('')
 const loading = ref(false)
 
@@ -37,7 +46,7 @@ async function handleLogin() {
   error.value = ''
   loading.value = true
   try {
-    const data = await login(phone.value, password.value)
+    const data = await login(phone.value, password.value, username.value || undefined)
     localStorage.setItem('tenant', JSON.stringify(data.tenant))
     localStorage.setItem('operator', JSON.stringify(data.operator))
     router.push('/')
@@ -77,4 +86,5 @@ button {
 button:disabled { opacity: .6; cursor: not-allowed; }
 .error { color: #d32; font-size: 13px; margin-top: 12px; }
 .switch { margin-top: 16px; font-size: 13px; color: #888; text-align: center; }
+.toggle-user { color: #1a56db; cursor: pointer; font-size: 12px; margin-top: 0 !important; user-select: none; }
 </style>
