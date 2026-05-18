@@ -81,6 +81,11 @@ const routes = [
         name: 'inventory-ledger',
         component: () => import('../views/InventoryLedger.vue'),
       },
+      {
+        path: 'reports',
+        name: 'reports',
+        component: () => import('../views/Reports.vue'),
+      },
     ],
   },
 ]

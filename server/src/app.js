@@ -14,6 +14,7 @@ const purchaseOrderRoutes = require('./routes/purchase-orders')
 const salesOrderRoutes = require('./routes/sales-orders')
 const inventoryRoutes = require('./routes/inventory')
 const exportRoutes = require('./routes/export')
+const reportRoutes = require('./routes/reports')
 
 const app = express()
 
@@ -34,6 +35,7 @@ app.use(purchaseOrderRoutes)
 app.use(salesOrderRoutes)
 app.use(inventoryRoutes)
 app.use(exportRoutes)
+app.use(reportRoutes)
 app.use(routes)
 app.use(errorHandler)
 

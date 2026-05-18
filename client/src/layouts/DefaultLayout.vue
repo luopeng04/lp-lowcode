@@ -37,6 +37,7 @@ const allMenus = [
   { path: '/sales-orders', label: '销售单', roles: ['admin', 'operator', 'readonly'] },
   { path: '/inventory', label: '库存查询', roles: ['admin', 'operator', 'readonly'] },
   { path: '/inventory-ledger', label: '库存流水', roles: ['admin', 'operator', 'readonly'] },
+  { path: '/reports', label: '经营报表', roles: ['admin', 'operator', 'readonly'] },
   { path: '/operators', label: '操作员管理', roles: ['admin'] },
 ]
 
