@@ -71,6 +71,16 @@ const routes = [
         name: 'sales-order-detail',
         component: () => import('../views/SalesOrderDetail.vue'),
       },
+      {
+        path: 'inventory',
+        name: 'inventory',
+        component: () => import('../views/Inventory.vue'),
+      },
+      {
+        path: 'inventory-ledger',
+        name: 'inventory-ledger',
+        component: () => import('../views/InventoryLedger.vue'),
+      },
     ],
   },
 ]

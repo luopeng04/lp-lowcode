@@ -165,3 +165,27 @@ export function confirmSalesOrder(id) {
 export function deliverSalesOrder(id) {
   return request(`/sales-orders/${id}/deliver`, { method: 'PUT' })
 }
+
+// Inventory
+export function getInventory({ warehouse_id, category, search, page = 1 } = {}) {
+  const params = new URLSearchParams({ page })
+  if (warehouse_id) params.set('warehouse_id', warehouse_id)
+  if (category) params.set('category', category)
+  if (search) params.set('search', search)
+  return request(`/inventory?${params}`)
+}
+export function updateSafetyStock(id, safety_stock) {
+  return request(`/inventory/${id}/safety-stock`, { method: 'PUT', body: JSON.stringify({ safety_stock }) })
+}
+export function getInventoryLedgers({ product_id, warehouse_id, type, start_date, end_date, page = 1 } = {}) {
+  const params = new URLSearchParams({ page })
+  if (product_id) params.set('product_id', product_id)
+  if (warehouse_id) params.set('warehouse_id', warehouse_id)
+  if (type) params.set('type', type)
+  if (start_date) params.set('start_date', start_date)
+  if (end_date) params.set('end_date', end_date)
+  return request(`/inventory-ledgers?${params}`)
+}
+export function doInventoryCheck(data) {
+  return request('/inventory-check', { method: 'POST', body: JSON.stringify(data) })
+}
