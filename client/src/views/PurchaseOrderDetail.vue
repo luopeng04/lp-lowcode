@@ -90,4 +90,14 @@ th { background: #f7f8fa; color: #555; }
 .actions { margin-top: 24px; display: flex; gap: 10px; }
 .btn-primary { padding: 8px 24px; background: #1a56db; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
 .btn-receive { padding: 8px 24px; background: #16a34a; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+
+@media print {
+  .sidebar, .actions, .back, .bottom { display: none !important; }
+  .main { padding: 0 !important; background: #fff !important; }
+  .card { box-shadow: none; padding: 0; }
+  .header h1 { font-size: 22px; }
+  .info label { color: #555; }
+  table th { background: #eee; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .status-received, .status-confirmed, .status-draft { background: none !important; padding: 0; }
+}
 </style>

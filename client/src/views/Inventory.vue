@@ -1,6 +1,9 @@
 <template>
   <div class="page">
-    <h1>库存查询</h1>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h1>库存查询</h1>
+      <button class="btn-secondary" @click="exportCSV">导出 Excel</button>
+    </div>
 
     <div class="toolbar">
       <input v-model="search" @input="onSearch" placeholder="搜索商品..." class="search" />
@@ -140,6 +143,22 @@ async function submitCheck() {
   }))})
   checkResult.value = '盘点完成！库存已更新。'
   await fetchList()
+}
+
+async function exportCSV() {
+  const tenant = JSON.parse(localStorage.getItem('tenant') || '{}')
+  const params = new URLSearchParams()
+  if (warehouseFilter.value) params.set('warehouse_id', warehouseFilter.value)
+  if (categoryFilter.value) params.set('category', categoryFilter.value)
+  if (search.value) params.set('search', search.value)
+  const res = await fetch(`/api/export/inventory?${params}`, {
+    headers: { 'X-Tenant-Id': String(tenant.id) }
+  })
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url; a.download = '库存汇总.csv'; a.click()
+  URL.revokeObjectURL(url)
 }
 
 onMounted(async () => { await loadMeta(); await fetchList() })

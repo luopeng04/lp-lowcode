@@ -1,6 +1,9 @@
 <template>
   <div class="page">
-    <h1>库存流水</h1>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h1>库存流水</h1>
+      <button class="btn-export" @click="exportCSV">导出 Excel</button>
+    </div>
 
     <div class="toolbar">
       <input v-model="startDate" @change="fetchList" type="date" class="filter" />
@@ -70,6 +73,24 @@ async function loadMeta() {
   warehouses.value = w.data; products.value = p.data
 }
 
+async function exportCSV() {
+  const tenant = JSON.parse(localStorage.getItem('tenant') || '{}')
+  const params = new URLSearchParams()
+  if (startDate.value) params.set('start_date', startDate.value)
+  if (endDate.value) params.set('end_date', endDate.value)
+  if (warehouseFilter.value) params.set('warehouse_id', warehouseFilter.value)
+  if (typeFilter.value) params.set('type', typeFilter.value)
+  if (productFilter.value) params.set('product_id', productFilter.value)
+  const res = await fetch(`/api/export/inventory-ledger?${params}`, {
+    headers: { 'X-Tenant-Id': String(tenant.id) }
+  })
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url; a.download = '库存流水.csv'; a.click()
+  URL.revokeObjectURL(url)
+}
+
 onMounted(async () => { await loadMeta(); await fetchList() })
 </script>
 
@@ -87,4 +108,5 @@ th { background: #f7f8fa; color: #555; font-weight: 600; }
 .pager { display: flex; align-items: center; gap: 12px; margin-top: 16px; font-size: 13px; justify-content: center; }
 .pager button { padding: 4px 12px; border: 1px solid #ddd; border-radius: 4px; background: #fff; cursor: pointer; }
 .pager button:disabled { opacity: .4; cursor: not-allowed; }
+.btn-export { padding: 7px 16px; background: #16a34a; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
 </style>
