@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS inventories (
   warehouse_id INT NOT NULL,
   quantity DECIMAL(12,2) NOT NULL DEFAULT 0,
   safety_stock DECIMAL(12,2) NOT NULL DEFAULT 0 COMMENT '安全库存量',
-  avg_cost DECIMAL(12,2) NOT NULL DEFAULT 0 COMMENT '移动加权平均成本',
+  avg_cost DECIMAL(12,4) NOT NULL DEFAULT 0 COMMENT '移动加权平均成本',
   UNIQUE KEY (product_id, warehouse_id)
 ) ENGINE=InnoDB;
 
