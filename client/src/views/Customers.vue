@@ -5,7 +5,7 @@
       <button class="btn-primary" @click="openCreate">+ 新建客户</button>
     </div>
 
-    <input v-model="search" @input="fetchList" placeholder="搜索名称/编码/联系人..." class="search" />
+    <input v-model="search" @input="onSearch" placeholder="搜索名称/编码/联系人..." class="search" />
 
     <table>
       <thead>
@@ -54,8 +54,15 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getCustomers, createCustomer, updateCustomer, deleteCustomer } from '../api.js'
+import { debounce } from '../utils.js'
 
 const list = ref([]), search = ref(''), page = ref(1), total = ref(0), pageSize = 20
+
+function onSearch() {
+  page.value = 1
+  debouncedSearch()
+}
+const debouncedSearch = debounce(fetchList, 300)
 const showModal = ref(false), editing = ref(null), saving = ref(false), error = ref('')
 const form = ref({ code: '', name: '', contact: '', phone: '', address: '', remark: '' })
 

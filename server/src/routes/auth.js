@@ -1,6 +1,6 @@
 const { Router } = require('express')
 const bcrypt = require('bcryptjs')
-const { getPlatformPool } = require('../config/database')
+const { getPlatformPool, getTenantPool } = require('../config/database')
 const { createTenantDatabase, seedTenantData } = require('../services/tenant-db')
 
 const router = Router()
@@ -42,8 +42,14 @@ router.post('/api/auth/register', async (req, res) => {
     const tenantId = result.insertId
 
     // Create database + seed data
-    await createTenantDatabase(dbName)
-    await seedTenantData(tenantId, dbName, phone, passwordHash)
+    try {
+      await createTenantDatabase(dbName)
+      await seedTenantData(tenantId, dbName, phone, passwordHash)
+    } catch (err) {
+      // Rollback tenant record if DB creation fails
+      await platform.query('DELETE FROM tenants WHERE id = ?', [tenantId])
+      throw err
+    }
 
     res.status(201).json({
       tenant: {
@@ -75,17 +81,15 @@ router.post('/api/auth/login', async (req, res) => {
     )
 
     if (rows.length === 0) {
-      return res.status(401).json({ error: '手机号未注册' })
+      return res.status(401).json({ error: '手机号或密码错误' })
     }
 
     const tenant = rows[0]
 
     if (tenant.status !== 1) {
-      return res.status(403).json({ error: '商户已被停用' })
+      return res.status(401).json({ error: '手机号或密码错误' })
     }
 
-    // Verify password against tenant DB's operator table
-    const { getTenantPool } = require('../config/database')
     const tenantPool = getTenantPool(tenant.db_name)
     const [operators] = await tenantPool.query(
       'SELECT id, username, password_hash, display_name, role FROM operators WHERE username = ? AND role = ?',
@@ -93,13 +97,13 @@ router.post('/api/auth/login', async (req, res) => {
     )
 
     if (operators.length === 0) {
-      return res.status(401).json({ error: '账号或密码错误' })
+      return res.status(401).json({ error: '手机号或密码错误' })
     }
 
     const operator = operators[0]
     const valid = await bcrypt.compare(password, operator.password_hash)
     if (!valid) {
-      return res.status(401).json({ error: '账号或密码错误' })
+      return res.status(401).json({ error: '手机号或密码错误' })
     }
 
     res.json({

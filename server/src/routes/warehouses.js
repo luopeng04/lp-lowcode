@@ -48,12 +48,21 @@ router.post('/api/warehouses', async (req, res) => {
   res.status(201).json({ id: result.insertId })
 })
 
+function validateId(id) {
+  const n = parseInt(id, 10)
+  if (isNaN(n) || n < 1) return null
+  return n
+}
+
 // PUT /api/warehouses/:id
 router.put('/api/warehouses/:id', async (req, res) => {
+  const id = validateId(req.params.id)
+  if (!id) return res.status(400).json({ error: '参数错误' })
+
   const pool = getTenantPool(req.tenant.db_name)
   const { name, contact, address, isDefault } = req.body
 
-  const [existing] = await pool.query('SELECT id FROM warehouses WHERE id = ? AND status = 1', [req.params.id])
+  const [existing] = await pool.query('SELECT id FROM warehouses WHERE id = ? AND status = 1', [id])
   if (existing.length === 0) {
     return res.status(404).json({ error: '仓库不存在' })
   }
@@ -63,22 +72,35 @@ router.put('/api/warehouses/:id', async (req, res) => {
   if (contact !== undefined) updates.contact = contact
   if (address !== undefined) updates.address = address
 
-  if (Object.keys(updates).length > 0) {
-    await pool.query('UPDATE warehouses SET ? WHERE id = ?', [updates, req.params.id])
-  }
+  const conn = await pool.getConnection()
+  try {
+    await conn.beginTransaction()
 
-  if (isDefault) {
-    await pool.query('UPDATE warehouses SET is_default = 0')
-    await pool.query('UPDATE warehouses SET is_default = 1 WHERE id = ?', [req.params.id])
-  }
+    if (Object.keys(updates).length > 0) {
+      await conn.query('UPDATE warehouses SET ? WHERE id = ?', [updates, id])
+    }
 
-  res.json({ ok: true })
+    if (isDefault) {
+      await conn.query('UPDATE warehouses SET is_default = 0')
+      await conn.query('UPDATE warehouses SET is_default = 1 WHERE id = ?', [id])
+    }
+
+    await conn.commit()
+    res.json({ ok: true })
+  } catch (err) {
+    await conn.rollback()
+    throw err
+  } finally {
+    conn.release()
+  }
 })
 
 // DELETE /api/warehouses/:id (soft delete)
 router.delete('/api/warehouses/:id', async (req, res) => {
+  const id = validateId(req.params.id)
+  if (!id) return res.status(400).json({ error: '参数错误' })
+
   const pool = getTenantPool(req.tenant.db_name)
-  const id = parseInt(req.params.id, 10)
 
   const [existing] = await pool.query(
     'SELECT id, is_default FROM warehouses WHERE id = ? AND status = 1',

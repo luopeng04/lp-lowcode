@@ -3,6 +3,12 @@ const { getTenantPool } = require('../config/database')
 
 const router = Router()
 
+function validateId(id) {
+  const n = parseInt(id, 10)
+  if (isNaN(n) || n < 1) return null
+  return n
+}
+
 router.use((req, res, next) => {
   if (!req.tenant) return res.status(400).json({ error: '未提供租户标识' })
   next()
@@ -47,9 +53,12 @@ router.post('/api/customers', async (req, res) => {
 })
 
 router.put('/api/customers/:id', async (req, res) => {
+  const id = validateId(req.params.id)
+  if (!id) return res.status(400).json({ error: '参数错误' })
+
   const pool = getTenantPool(req.tenant.db_name)
   const { name, contact, phone, address, remark } = req.body
-  const [existing] = await pool.query('SELECT id FROM customers WHERE id = ? AND status = 1', [req.params.id])
+  const [existing] = await pool.query('SELECT id FROM customers WHERE id = ? AND status = 1', [id])
   if (existing.length === 0) return res.status(404).json({ error: '客户不存在' })
 
   const updates = {}
@@ -60,16 +69,19 @@ router.put('/api/customers/:id', async (req, res) => {
   if (remark !== undefined) updates.remark = remark
 
   if (Object.keys(updates).length > 0) {
-    await pool.query('UPDATE customers SET ? WHERE id = ?', [updates, req.params.id])
+    await pool.query('UPDATE customers SET ? WHERE id = ?', [updates, id])
   }
   res.json({ ok: true })
 })
 
 router.delete('/api/customers/:id', async (req, res) => {
+  const id = validateId(req.params.id)
+  if (!id) return res.status(400).json({ error: '参数错误' })
+
   const pool = getTenantPool(req.tenant.db_name)
-  const [existing] = await pool.query('SELECT id FROM customers WHERE id = ? AND status = 1', [req.params.id])
+  const [existing] = await pool.query('SELECT id FROM customers WHERE id = ? AND status = 1', [id])
   if (existing.length === 0) return res.status(404).json({ error: '客户不存在' })
-  await pool.query('UPDATE customers SET status = 0 WHERE id = ?', [req.params.id])
+  await pool.query('UPDATE customers SET status = 0 WHERE id = ?', [id])
   res.json({ ok: true })
 })
 

@@ -5,7 +5,7 @@
       <button class="btn-primary" @click="openCreate">+ 新建仓库</button>
     </div>
 
-    <input v-model="search" @input="fetchList" placeholder="搜索名称或编码..." class="search" />
+    <input v-model="search" @input="debouncedSearch" placeholder="搜索名称或编码..." class="search" />
 
     <table>
       <thead>
@@ -63,9 +63,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getWarehouses, createWarehouse, updateWarehouse, deleteWarehouse } from '../api.js'
+import { debounce } from '../utils.js'
 
 const list = ref([])
 const search = ref('')
+const debouncedSearch = debounce(fetchList, 300)
 const showModal = ref(false)
 const editing = ref(null)
 const saving = ref(false)
