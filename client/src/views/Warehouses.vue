@@ -57,12 +57,15 @@
         </form>
       </div>
     </div>
+
+    <ConfirmModal v-if="confirmMsg" :message="confirmMsg" @confirm="onConfirm" @cancel="confirmMsg = ''" />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getWarehouses, createWarehouse, updateWarehouse, deleteWarehouse } from '../api.js'
+import ConfirmModal from '../components/ConfirmModal.vue'
 import { debounce, canWrite } from '../utils.js'
 
 const list = ref([])
@@ -74,6 +77,7 @@ const saving = ref(false)
 const error = ref('')
 
 const form = ref({ code: '', name: '', contact: '', address: '' })
+const confirmMsg = ref(''), confirmAction = ref(null)
 
 async function fetchList() {
   const data = await getWarehouses(search.value)
@@ -116,14 +120,16 @@ async function handleSave() {
   }
 }
 
+function askConfirm(msg, action) {
+  confirmMsg.value = msg; confirmAction.value = action
+}
+async function onConfirm() {
+  try { await confirmAction.value() } catch (e) { alert(e.message) }
+  confirmMsg.value = ''; await fetchList()
+}
+
 async function handleDelete(w) {
-  if (!confirm(`确认删除仓库"${w.name}"？`)) return
-  try {
-    await deleteWarehouse(w.id)
-    await fetchList()
-  } catch (e) {
-    alert(e.message)
-  }
+  askConfirm(`确认删除仓库"${w.name}"？`, () => deleteWarehouse(w.id))
 }
 
 onMounted(fetchList)

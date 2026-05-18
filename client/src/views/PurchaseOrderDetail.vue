@@ -37,12 +37,15 @@
         <button v-if="order.status === 'confirmed'" class="btn-receive" @click="handleReceive">确认入库</button>
       </div>
     </div>
+
+    <ConfirmModal v-if="confirmMsg" :message="confirmMsg" @confirm="onConfirm" @cancel="confirmMsg = ''" />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import ConfirmModal from '../components/ConfirmModal.vue'
 import { getPurchaseOrder, confirmPurchaseOrder, receivePurchaseOrder } from '../api.js'
 import { canWrite } from '../utils.js'
 
@@ -50,22 +53,25 @@ const route = useRoute()
 const router = useRouter()
 const order = ref(null), items = ref([])
 const statusMap = { draft: '草稿', confirmed: '已审核', received: '已入库', cancelled: '已取消' }
+const confirmMsg = ref(''), confirmAction = ref(null)
 
 async function load() {
   const data = await getPurchaseOrder(route.params.id)
   order.value = data.order; items.value = data.items
 }
 
-async function handleConfirm() {
-  if (!confirm('确认审核通过？')) return
-  await confirmPurchaseOrder(order.value.id)
-  await load()
+function askConfirm(msg, action) {
+  confirmMsg.value = msg; confirmAction.value = action
+}
+async function onConfirm() {
+  await confirmAction.value(); confirmMsg.value = ''; await load()
 }
 
+async function handleConfirm() {
+  askConfirm('确认审核通过？', () => confirmPurchaseOrder(order.value.id))
+}
 async function handleReceive() {
-  if (!confirm('确认入库？库存将自动更新。')) return
-  await receivePurchaseOrder(order.value.id)
-  await load()
+  askConfirm('确认入库？库存将自动更新。', () => receivePurchaseOrder(order.value.id))
 }
 
 onMounted(load)

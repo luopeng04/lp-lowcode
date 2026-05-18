@@ -31,36 +31,42 @@
         <button v-if="order.status === 'confirmed'" class="btn-deliver" @click="handleDeliver">确认出库</button>
       </div>
     </div>
+
+    <ConfirmModal v-if="confirmMsg" :message="confirmMsg" @confirm="onConfirm" @cancel="confirmMsg = ''" />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import ConfirmModal from '../components/ConfirmModal.vue'
 import { getSalesOrder, confirmSalesOrder, deliverSalesOrder } from '../api.js'
 import { canWrite } from '../utils.js'
 
 const route = useRoute()
 const order = ref(null), items = ref([])
 const statusMap = { draft: '草稿', confirmed: '已审核', delivered: '已出库', cancelled: '已取消' }
+const confirmMsg = ref(''), confirmAction = ref(null)
 
 async function load() {
   const data = await getSalesOrder(route.params.id)
   order.value = data.order; items.value = data.items
 }
 
-async function handleConfirm() {
-  if (!confirm('确认审核通过？')) return
-  await confirmSalesOrder(order.value.id)
-  await load()
+function askConfirm(msg, action) {
+  confirmMsg.value = msg; confirmAction.value = action
+}
+async function onConfirm() {
+  await confirmAction.value(); confirmMsg.value = ''; await load()
 }
 
+async function handleConfirm() {
+  askConfirm('确认审核通过？', () => confirmSalesOrder(order.value.id))
+}
 async function handleDeliver() {
-  if (!confirm('确认出库？库存将自动扣减。')) return
-  try {
-    await deliverSalesOrder(order.value.id)
-    await load()
-  } catch (e) { alert(e.message) }
+  askConfirm('确认出库？库存将自动扣减。', async () => {
+    try { await deliverSalesOrder(order.value.id) } catch (e) { alert(e.message) }
+  })
 }
 
 onMounted(load)

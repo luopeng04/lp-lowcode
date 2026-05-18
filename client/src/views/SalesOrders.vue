@@ -96,6 +96,8 @@
         </form>
       </div>
     </div>
+
+    <ConfirmModal v-if="confirmMsg" :message="confirmMsg" @confirm="onConfirm" @cancel="confirmMsg = ''" />
   </div>
 </template>
 
@@ -103,12 +105,14 @@
 import { ref, onMounted, reactive } from 'vue'
 import { getProducts, getWarehouses, getCustomers } from '../api.js'
 import { getSalesOrders, createSalesOrder, confirmSalesOrder, deliverSalesOrder } from '../api.js'
+import ConfirmModal from '../components/ConfirmModal.vue'
 import { debounce, canWrite } from '../utils.js'
 
 const list = ref([]), search = ref(''), statusFilter = ref(''), page = ref(1), total = ref(0), pageSize = 20
 const showModal = ref(false), saving = ref(false), error = ref('')
 const customers = ref([]), warehouses = ref([]), products = ref([])
 const statusMap = { draft: '草稿', confirmed: '已审核', delivered: '已出库', cancelled: '已取消' }
+const confirmMsg = ref(''), confirmAction = ref(null)
 const form = reactive({ customer_id: '', warehouse_id: '', ordered_at: '', items: [] })
 
 async function fetchList() {
@@ -144,18 +148,20 @@ async function handleSave() {
   } catch (e) { error.value = e.message } finally { saving.value = false }
 }
 
-async function handleConfirm(so) {
-  if (!confirm(`确认审核销售单 ${so.order_no}？`)) return
-  await confirmSalesOrder(so.id)
-  await fetchList()
+function askConfirm(msg, action) {
+  confirmMsg.value = msg; confirmAction.value = action
+}
+async function onConfirm() {
+  await confirmAction.value(); confirmMsg.value = ''; await fetchList()
 }
 
+async function handleConfirm(so) {
+  askConfirm(`确认审核销售单 ${so.order_no}？`, () => confirmSalesOrder(so.id))
+}
 async function handleDeliver(so) {
-  if (!confirm(`确认出库销售单 ${so.order_no}？库存将自动扣减。`)) return
-  try {
-    await deliverSalesOrder(so.id)
-    await fetchList()
-  } catch (e) { alert(e.message) }
+  askConfirm(`确认出库销售单 ${so.order_no}？库存将自动扣减。`, async () => {
+    try { await deliverSalesOrder(so.id) } catch (e) { alert(e.message) }
+  })
 }
 
 onMounted(async () => { await loadMeta(); await fetchList() })

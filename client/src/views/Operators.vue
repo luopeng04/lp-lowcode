@@ -67,11 +67,14 @@
         </form>
       </div>
     </div>
+
+    <ConfirmModal v-if="confirmMsg" :message="confirmMsg" @confirm="onConfirm" @cancel="confirmMsg = ''" />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, reactive } from 'vue'
+import ConfirmModal from '../components/ConfirmModal.vue'
 import { getOperators, createOperator, updateOperator, resetPassword } from '../api.js'
 
 const list = ref([])
@@ -79,6 +82,7 @@ const roleMap = { admin: '管理员', operator: '操作员', readonly: '只读' 
 const showModal = ref(false), editing = ref(null), saving = ref(false), error = ref('')
 const form = reactive({ username: '', display_name: '', password: '', role: 'operator' })
 const showPwdModal = ref(false), pwdTarget = ref(null), newPassword = ref(''), pwdError = ref('')
+const confirmMsg = ref(''), confirmAction = ref(null)
 
 async function fetchList() {
   const data = await getOperators()
@@ -111,15 +115,18 @@ async function handleSave() {
   } catch (e) { error.value = e.message } finally { saving.value = false }
 }
 
-async function handleDisable(o) {
-  if (!confirm(`确认禁用操作员"${o.display_name}"？`)) return
-  await updateOperator(o.id, { status: 0 })
-  await fetchList()
+function askConfirm(msg, action) {
+  confirmMsg.value = msg; confirmAction.value = action
+}
+async function onConfirm() {
+  await confirmAction.value(); confirmMsg.value = ''; await fetchList()
 }
 
+async function handleDisable(o) {
+  askConfirm(`确认禁用操作员"${o.display_name}"？`, () => updateOperator(o.id, { status: 0 }))
+}
 async function handleEnable(o) {
-  await updateOperator(o.id, { status: 1 })
-  await fetchList()
+  askConfirm(`确认启用操作员"${o.display_name}"？`, () => updateOperator(o.id, { status: 1 }))
 }
 
 function openResetPwd(o) {

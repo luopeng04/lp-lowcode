@@ -125,6 +125,8 @@
         </div>
       </div>
     </div>
+
+    <ConfirmModal v-if="confirmMsg" :message="confirmMsg" @confirm="onConfirm" @cancel="confirmMsg = ''" />
   </div>
 </template>
 
@@ -134,6 +136,7 @@ import {
   getProducts, createProduct, updateProduct, deleteProduct,
   getCategories, getCustomFields, createCustomField, deleteCustomField,
 } from '../api.js'
+import ConfirmModal from '../components/ConfirmModal.vue'
 import { debounce, canWrite } from '../utils.js'
 
 const list = ref([]), search = ref(''), categoryFilter = ref(''), page = ref(1), total = ref(0), pageSize = 20
@@ -141,6 +144,7 @@ const categories = ref([])
 const customFields = ref([])
 const showModal = ref(false), editing = ref(null), saving = ref(false), error = ref('')
 const form = reactive({ code: '', name: '', spec: '', unit: '个', category: '', cost_price: 0, sale_price: 0, custom_data: {} })
+const confirmMsg = ref(''), confirmAction = ref(null)
 const showFieldsModal = ref(false), fieldError = ref('')
 const newField = reactive({ field_name: '', field_label: '', field_type: 'text', optionsStr: '' })
 
@@ -191,9 +195,16 @@ async function handleSave() {
   } catch (e) { error.value = e.message } finally { saving.value = false }
 }
 
+function askConfirm(msg, action) {
+  confirmMsg.value = msg; confirmAction.value = action
+}
+async function onConfirm() {
+  try { await confirmAction.value() } catch (e) { alert(e.message) }
+  confirmMsg.value = ''; await fetchList()
+}
+
 async function handleDelete(p) {
-  if (!confirm(`确认删除商品"${p.name}"？`)) return
-  try { await deleteProduct(p.id); await fetchList() } catch (e) { alert(e.message) }
+  askConfirm(`确认删除商品"${p.name}"？`, () => deleteProduct(p.id))
 }
 
 function openCustomFields() { fieldError.value = ''; newField.field_name = ''; newField.field_label = ''; newField.field_type = 'text'; newField.optionsStr = ''; showFieldsModal.value = true }

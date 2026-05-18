@@ -98,6 +98,8 @@
         </form>
       </div>
     </div>
+
+    <ConfirmModal v-if="confirmMsg" :message="confirmMsg" @confirm="onConfirm" @cancel="confirmMsg = ''" />
   </div>
 </template>
 
@@ -105,12 +107,14 @@
 import { ref, onMounted, reactive } from 'vue'
 import { getProducts, getWarehouses, getSuppliers } from '../api.js'
 import { getPurchaseOrders, createPurchaseOrder, confirmPurchaseOrder, receivePurchaseOrder } from '../api.js'
+import ConfirmModal from '../components/ConfirmModal.vue'
 import { debounce, canWrite } from '../utils.js'
 
 const list = ref([]), search = ref(''), statusFilter = ref(''), page = ref(1), total = ref(0), pageSize = 20
 const showModal = ref(false), saving = ref(false), error = ref('')
 const suppliers = ref([]), warehouses = ref([]), products = ref([])
 const statusMap = { draft: '草稿', confirmed: '已审核', received: '已入库', cancelled: '已取消' }
+const confirmMsg = ref(''), confirmAction = ref(null)
 
 const form = reactive({ supplier_id: '', warehouse_id: '', ordered_at: '', items: [] })
 
@@ -147,16 +151,18 @@ async function handleSave() {
   } catch (e) { error.value = e.message } finally { saving.value = false }
 }
 
-async function handleConfirm(po) {
-  if (!confirm(`确认审核采购单 ${po.order_no}？`)) return
-  await confirmPurchaseOrder(po.id)
-  await fetchList()
+function askConfirm(msg, action) {
+  confirmMsg.value = msg; confirmAction.value = action
+}
+async function onConfirm() {
+  await confirmAction.value(); confirmMsg.value = ''; await fetchList()
 }
 
+async function handleConfirm(po) {
+  askConfirm(`确认审核采购单 ${po.order_no}？`, () => confirmPurchaseOrder(po.id))
+}
 async function handleReceive(po) {
-  if (!confirm(`确认入库采购单 ${po.order_no}？库存将自动更新。`)) return
-  await receivePurchaseOrder(po.id)
-  await fetchList()
+  askConfirm(`确认入库采购单 ${po.order_no}？库存将自动更新。`, () => receivePurchaseOrder(po.id))
 }
 
 onMounted(async () => { await loadMeta(); await fetchList() })

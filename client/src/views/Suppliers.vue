@@ -48,12 +48,15 @@
         </form>
       </div>
     </div>
+
+    <ConfirmModal v-if="confirmMsg" :message="confirmMsg" @confirm="onConfirm" @cancel="confirmMsg = ''" />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getSuppliers, createSupplier, updateSupplier, deleteSupplier } from '../api.js'
+import ConfirmModal from '../components/ConfirmModal.vue'
 import { debounce, canWrite } from '../utils.js'
 
 const list = ref([]), search = ref(''), page = ref(1), total = ref(0), pageSize = 20
@@ -65,6 +68,7 @@ function onSearch() {
 const debouncedSearch = debounce(fetchList, 300)
 const showModal = ref(false), editing = ref(null), saving = ref(false), error = ref('')
 const form = ref({ code: '', name: '', contact: '', phone: '', address: '', remark: '' })
+const confirmMsg = ref(''), confirmAction = ref(null)
 
 async function fetchList() {
   const data = await getSuppliers(search.value, page.value)
@@ -94,9 +98,16 @@ async function handleSave() {
   } catch (e) { error.value = e.message } finally { saving.value = false }
 }
 
+function askConfirm(msg, action) {
+  confirmMsg.value = msg; confirmAction.value = action
+}
+async function onConfirm() {
+  try { await confirmAction.value() } catch (e) { alert(e.message) }
+  confirmMsg.value = ''; await fetchList()
+}
+
 async function handleDelete(s) {
-  if (!confirm(`确认删除供应商"${s.name}"？`)) return
-  try { await deleteSupplier(s.id); await fetchList() } catch (e) { alert(e.message) }
+  askConfirm(`确认删除供应商"${s.name}"？`, () => deleteSupplier(s.id))
 }
 
 onMounted(fetchList)
