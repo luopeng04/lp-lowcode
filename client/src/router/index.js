@@ -51,6 +51,16 @@ const routes = [
         name: 'operators',
         component: () => import('../views/Operators.vue'),
       },
+      {
+        path: 'purchase-orders',
+        name: 'purchase-orders',
+        component: () => import('../views/PurchaseOrders.vue'),
+      },
+      {
+        path: 'purchase-orders/:id',
+        name: 'purchase-order-detail',
+        component: () => import('../views/PurchaseOrderDetail.vue'),
+      },
     ],
   },
 ]

@@ -1,0 +1,93 @@
+<template>
+  <div class="page">
+    <router-link to="/purchase-orders" class="back">← 返回列表</router-link>
+
+    <div v-if="order" class="card">
+      <div class="header">
+        <h1>{{ order.order_no }}</h1>
+        <span :class="`status-${order.status}`">{{ statusMap[order.status] }}</span>
+      </div>
+
+      <div class="info">
+        <div><label>供应商</label><span>{{ order.supplier_name }}</span></div>
+        <div><label>仓库</label><span>{{ order.warehouse_name }}</span></div>
+        <div><label>日期</label><span>{{ order.ordered_at || '-' }}</span></div>
+        <div><label>金额</label><span class="amount">{{ order.total_amount }}</span></div>
+      </div>
+
+      <h3>商品明细</h3>
+      <table>
+        <thead>
+          <tr><th>商品</th><th>编码</th><th>单位</th><th>数量</th><th>单价</th><th>金额</th></tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in items" :key="item.id">
+            <td>{{ item.product_name }}</td>
+            <td>{{ item.product_code }}</td>
+            <td>{{ item.unit }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ item.unit_price }}</td>
+            <td>{{ item.amount }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="actions">
+        <button v-if="order.status === 'draft'" class="btn-primary" @click="handleConfirm">审核通过</button>
+        <button v-if="order.status === 'confirmed'" class="btn-receive" @click="handleReceive">确认入库</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { getPurchaseOrder, confirmPurchaseOrder, receivePurchaseOrder } from '../api.js'
+
+const route = useRoute()
+const router = useRouter()
+const order = ref(null), items = ref([])
+const statusMap = { draft: '草稿', confirmed: '已审核', received: '已入库', cancelled: '已取消' }
+
+async function load() {
+  const data = await getPurchaseOrder(route.params.id)
+  order.value = data.order; items.value = data.items
+}
+
+async function handleConfirm() {
+  if (!confirm('确认审核通过？')) return
+  await confirmPurchaseOrder(order.value.id)
+  await load()
+}
+
+async function handleReceive() {
+  if (!confirm('确认入库？库存将自动更新。')) return
+  await receivePurchaseOrder(order.value.id)
+  await load()
+}
+
+onMounted(load)
+</script>
+
+<style scoped>
+.page { max-width: 800px; }
+.back { color: #1a56db; text-decoration: none; font-size: 13px; display: inline-block; margin-bottom: 12px; }
+.card { background: #fff; border-radius: 8px; padding: 24px; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+h1 { font-size: 20px; }
+h3 { font-size: 14px; margin: 20px 0 8px; }
+.status-draft { padding: 4px 10px; border-radius: 12px; font-size: 12px; background: #eee; color: #888; }
+.status-confirmed { padding: 4px 10px; border-radius: 12px; font-size: 12px; background: #e0e7ff; color: #1a56db; }
+.status-received { padding: 4px 10px; border-radius: 12px; font-size: 12px; background: #dcfce7; color: #16a34a; }
+.info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.info label { font-size: 12px; color: #888; display: block; }
+.info span { font-size: 15px; }
+.amount { color: #d32; font-weight: 600; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 8px 12px; text-align: left; font-size: 13px; border-bottom: 1px solid #eee; }
+th { background: #f7f8fa; color: #555; }
+.actions { margin-top: 24px; display: flex; gap: 10px; }
+.btn-primary { padding: 8px 24px; background: #1a56db; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+.btn-receive { padding: 8px 24px; background: #16a34a; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+</style>

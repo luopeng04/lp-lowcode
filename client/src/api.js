@@ -125,3 +125,23 @@ export function updateOperator(id, data) {
 export function resetPassword(id, password) {
   return request(`/operators/${id}/reset-password`, { method: 'PUT', body: JSON.stringify({ password }) })
 }
+
+// Purchase orders
+export function getPurchaseOrders({ search, status, page = 1 } = {}) {
+  const params = new URLSearchParams({ page })
+  if (search) params.set('search', search)
+  if (status) params.set('status', status)
+  return request(`/purchase-orders?${params}`)
+}
+export function getPurchaseOrder(id) {
+  return request(`/purchase-orders/${id}`)
+}
+export function createPurchaseOrder(data) {
+  return request('/purchase-orders', { method: 'POST', body: JSON.stringify(data) })
+}
+export function confirmPurchaseOrder(id) {
+  return request(`/purchase-orders/${id}/confirm`, { method: 'PUT' })
+}
+export function receivePurchaseOrder(id) {
+  return request(`/purchase-orders/${id}/receive`, { method: 'PUT' })
+}

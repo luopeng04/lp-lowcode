@@ -11,7 +11,7 @@ router.use((req, res, next) => {
 })
 
 // All operator management routes require admin
-router.use(requireRole('admin'))
+router.use('/api/operators', requireRole('admin'))
 
 // GET /api/operators
 router.get('/api/operators', async (req, res) => {
