@@ -43,3 +43,33 @@ export function updateWarehouse(id, data) {
 export function deleteWarehouse(id) {
   return request(`/warehouses/${id}`, { method: 'DELETE' })
 }
+
+// Suppliers
+export function getSuppliers(search, page = 1) {
+  const q = `?page=${page}${search ? `&search=${encodeURIComponent(search)}` : ''}`
+  return request(`/suppliers${q}`)
+}
+export function createSupplier(data) {
+  return request('/suppliers', { method: 'POST', body: JSON.stringify(data) })
+}
+export function updateSupplier(id, data) {
+  return request(`/suppliers/${id}`, { method: 'PUT', body: JSON.stringify(data) })
+}
+export function deleteSupplier(id) {
+  return request(`/suppliers/${id}`, { method: 'DELETE' })
+}
+
+// Customers
+export function getCustomers(search, page = 1) {
+  const q = `?page=${page}${search ? `&search=${encodeURIComponent(search)}` : ''}`
+  return request(`/customers${q}`)
+}
+export function createCustomer(data) {
+  return request('/customers', { method: 'POST', body: JSON.stringify(data) })
+}
+export function updateCustomer(id, data) {
+  return request(`/customers/${id}`, { method: 'PUT', body: JSON.stringify(data) })
+}
+export function deleteCustomer(id) {
+  return request(`/customers/${id}`, { method: 'DELETE' })
+}
