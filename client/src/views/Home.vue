@@ -8,7 +8,6 @@
 
 <style scoped>
 .home {
-  max-width: 800px;
 }
 h1 {
   font-size: 24px;

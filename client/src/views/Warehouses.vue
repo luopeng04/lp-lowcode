@@ -130,7 +130,6 @@ onMounted(fetchList)
 </script>
 
 <style scoped>
-.page { max-width: 900px; }
 .search { margin-bottom: 12px; }
 th, td { padding: 10px 14px; font-size: 14px; }
 .modal { width: 400px; }

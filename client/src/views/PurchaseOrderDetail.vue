@@ -72,7 +72,6 @@ onMounted(load)
 </script>
 
 <style scoped>
-.page { max-width: 800px; }
 .back { color: #1a56db; text-decoration: none; font-size: 13px; display: inline-block; margin-bottom: 12px; }
 .card { background: #fff; border-radius: 8px; padding: 24px; }
 .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
