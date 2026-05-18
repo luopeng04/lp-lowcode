@@ -1,25 +1,15 @@
 const { Router } = require('express')
 const { getTenantPool } = require('../config/database')
-const { requireRole } = require('../middleware/operator')
+const { validateId, writeGuard } = require('../utils')
 
 const router = Router()
-
-function validateId(id) {
-  const n = parseInt(id, 10)
-  if (isNaN(n) || n < 1) return null
-  return n
-}
 
 router.use((req, res, next) => {
   if (!req.tenant) return res.status(400).json({ error: '未提供租户标识' })
   next()
 })
 
-const writeGuard = requireRole('admin', 'operator')
-router.use((req, res, next) => {
-  if (['POST', 'PUT', 'DELETE'].includes(req.method)) return writeGuard(req, res, next)
-  next()
-})
+writeGuard(router)
 
 router.get('/api/customers', async (req, res) => {
   const pool = getTenantPool(req.tenant.db_name)

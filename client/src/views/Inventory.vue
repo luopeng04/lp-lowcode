@@ -165,31 +165,13 @@ onMounted(async () => { await loadMeta(); await fetchList() })
 </script>
 
 <style scoped>
-.page { max-width: 1100px; }
-h1 { font-size: 20px; margin-bottom: 16px; }
 h2 { font-size: 16px; margin-bottom: 12px; }
-.toolbar { display: flex; gap: 10px; margin-bottom: 12px; }
-.search { width: 200px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
-select { padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 6px; overflow: hidden; }
-th, td { padding: 8px 10px; text-align: left; font-size: 13px; border-bottom: 1px solid #eee; }
-th { background: #f7f8fa; color: #555; font-weight: 600; }
 .warn { background: #fff3cd; }
 .low { color: #d32; font-weight: 700; }
 .diff { color: #d32; font-weight: 700; }
-td button { padding: 4px 10px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px; background: #fff; cursor: pointer; }
-.empty { text-align: center; color: #999; padding: 40px; }
-.btn-primary { padding: 8px 20px; background: #1a56db; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
-.btn-secondary { padding: 7px 16px; background: #fff; color: #1a56db; border: 1px solid #1a56db; border-radius: 4px; cursor: pointer; font-size: 13px; }
 .card { background: #fff; border-radius: 8px; padding: 24px; }
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.3); display: flex; align-items: center; justify-content: center; z-index: 100; }
-.modal { background: #fff; padding: 24px; border-radius: 8px; width: 380px; }
-.modal h2 { font-size: 17px; margin-bottom: 16px; }
-.modal label { display: block; font-size: 13px; color: #555; margin-bottom: 2px; }
-.modal input { width: 100%; padding: 7px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; margin-bottom: 10px; box-sizing: border-box; }
-.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
-.modal-actions button { padding: 7px 18px; font-size: 13px; border: 1px solid #ddd; border-radius: 4px; background: #fff; cursor: pointer; }
-.modal-actions .btn-primary { background: #1a56db; color: #fff; border: none; }
-.error { color: #d32; font-size: 13px; }
+.modal { width: 380px; }
+.modal input { margin-bottom: 10px; }
+.modal-actions { margin-top: 8px; }
 .success { color: #16a34a; font-size: 14px; margin-top: 8px; }
 </style>

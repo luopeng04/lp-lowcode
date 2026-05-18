@@ -162,43 +162,10 @@ onMounted(async () => { await loadMeta(); await fetchList() })
 </script>
 
 <style scoped>
-.page { max-width: 1000px; }
-.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-h1 { font-size: 20px; }
-h3 { font-size: 14px; margin: 12px 0 8px; }
-.btn-primary { padding: 8px 20px; background: #1a56db; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
 .btn-deliver { padding: 4px 10px; background: #16a34a; color: #fff; border: none; border-radius: 3px; cursor: pointer; font-size: 12px; }
-.btn-secondary { padding: 6px 14px; background: #fff; color: #1a56db; border: 1px solid #1a56db; border-radius: 4px; cursor: pointer; font-size: 13px; }
-.btn-sm { padding: 2px 8px; font-size: 11px; border: 1px solid #ecc; color: #d32; border-radius: 3px; background: #fff; cursor: pointer; }
-.toolbar { display: flex; gap: 10px; margin-bottom: 12px; }
-.search { width: 220px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
-.filter { padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 6px; overflow: hidden; }
-th, td { padding: 10px 12px; text-align: left; font-size: 13px; border-bottom: 1px solid #eee; }
-th { background: #f7f8fa; color: #555; font-weight: 600; }
 td a { color: #1a56db; text-decoration: none; }
-td button { margin-right: 6px; padding: 4px 10px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px; background: #fff; cursor: pointer; }
 .status-draft { color: #888; }
 .status-confirmed { color: #1a56db; }
 .status-delivered { color: #16a34a; }
 .status-cancelled { color: #d32; }
-.empty { text-align: center; color: #999; padding: 40px; }
-.pager { display: flex; align-items: center; gap: 12px; margin-top: 16px; font-size: 13px; justify-content: center; }
-.pager button { padding: 4px 12px; border: 1px solid #ddd; border-radius: 4px; background: #fff; cursor: pointer; }
-.pager button:disabled { opacity: .4; cursor: not-allowed; }
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.3); display: flex; align-items: center; justify-content: center; z-index: 100; }
-.modal { background: #fff; padding: 24px; border-radius: 8px; width: 460px; max-height: 85vh; overflow-y: auto; }
-.modal-lg { width: 640px; }
-.modal h2 { font-size: 17px; margin-bottom: 16px; }
-.modal label { display: block; font-size: 13px; color: #555; margin-bottom: 2px; }
-.modal input, .modal select { width: 100%; padding: 7px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; margin-bottom: 8px; box-sizing: border-box; }
-.row { display: flex; gap: 10px; }
-.row > div { flex: 1; }
-.item-table { width: 100%; margin-bottom: 8px; }
-.item-table th, .item-table td { padding: 6px 8px; font-size: 12px; }
-.item-table select, .item-table input { margin-bottom: 0; padding: 5px 8px; font-size: 12px; }
-.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px; }
-.modal-actions button { padding: 7px 18px; font-size: 13px; border: 1px solid #ddd; border-radius: 4px; background: #fff; cursor: pointer; }
-.modal-actions .btn-primary { background: #1a56db; color: #fff; border: none; }
-.error { color: #d32; font-size: 13px; }
 </style>

@@ -2,6 +2,7 @@ const { Router } = require('express')
 const bcrypt = require('bcryptjs')
 const { getTenantPool } = require('../config/database')
 const { requireRole } = require('../middleware/operator')
+const { validateId } = require('../utils')
 
 const router = Router()
 
@@ -48,8 +49,8 @@ router.post('/api/operators', async (req, res) => {
 // PUT /api/operators/:id (disable/enable)
 router.put('/api/operators/:id', async (req, res) => {
   const pool = getTenantPool(req.tenant.db_name)
-  const id = parseInt(req.params.id)
-  if (isNaN(id)) return res.status(400).json({ error: '参数错误' })
+  const id = validateId(req.params.id)
+  if (!id) return res.status(400).json({ error: '参数错误' })
 
   const { status, display_name, role } = req.body
 
@@ -75,8 +76,8 @@ router.put('/api/operators/:id', async (req, res) => {
 // PUT /api/operators/:id/reset-password
 router.put('/api/operators/:id/reset-password', async (req, res) => {
   const pool = getTenantPool(req.tenant.db_name)
-  const id = parseInt(req.params.id)
-  if (isNaN(id)) return res.status(400).json({ error: '参数错误' })
+  const id = validateId(req.params.id)
+  if (!id) return res.status(400).json({ error: '参数错误' })
 
   const { password } = req.body
   if (!password || password.length < 6) {

@@ -224,41 +224,11 @@ onMounted(async () => { await loadMeta(); await fetchList() })
 </script>
 
 <style scoped>
-.page { max-width: 1100px; }
-.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-h1 { font-size: 20px; }
 .header-actions { display: flex; gap: 10px; }
-.btn-primary { padding: 8px 20px; background: #1a56db; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
-.btn-secondary { padding: 8px 20px; background: #fff; color: #1a56db; border: 1px solid #1a56db; border-radius: 4px; cursor: pointer; font-size: 14px; }
-.toolbar { display: flex; gap: 10px; margin-bottom: 12px; }
-.search { width: 220px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
-.filter { padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 6px; overflow: hidden; }
-th, td { padding: 10px 12px; text-align: left; font-size: 13px; border-bottom: 1px solid #eee; }
-th { background: #f7f8fa; color: #555; font-weight: 600; }
-td button { margin-right: 6px; padding: 4px 10px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px; background: #fff; cursor: pointer; }
-.btn-danger { color: #d32; border-color: #ecc; }
-.empty { text-align: center; color: #999; padding: 40px; }
-.pager { display: flex; align-items: center; gap: 12px; margin-top: 16px; font-size: 13px; justify-content: center; }
-.pager button { padding: 4px 12px; border: 1px solid #ddd; border-radius: 4px; background: #fff; cursor: pointer; }
-.pager button:disabled { opacity: .4; cursor: not-allowed; }
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.3); display: flex; align-items: center; justify-content: center; z-index: 100; }
-.modal { background: #fff; padding: 24px; border-radius: 8px; width: 460px; max-height: 80vh; overflow-y: auto; }
-.modal h2 { font-size: 17px; margin-bottom: 16px; }
-.modal h3 { font-size: 14px; margin-bottom: 8px; }
-.modal label { display: block; font-size: 13px; color: #555; margin-bottom: 2px; }
-.modal input, .modal select { width: 100%; padding: 7px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; margin-bottom: 8px; box-sizing: border-box; }
-.row { display: flex; gap: 10px; }
-.row > div { flex: 1; }
 .required { color: #d32; }
-.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px; }
-.modal-actions button { padding: 7px 18px; font-size: 13px; border: 1px solid #ddd; border-radius: 4px; background: #fff; cursor: pointer; }
-.modal-actions .btn-primary { background: #1a56db; color: #fff; border: none; }
-.error { color: #d32; font-size: 13px; }
 .field-list { list-style: none; padding: 0; }
 .field-list li { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #eee; font-size: 14px; }
 .field-list li small { color: #999; }
-.btn-sm { padding: 2px 8px; font-size: 12px; border: 1px solid #ecc; color: #d32; border-radius: 3px; background: #fff; cursor: pointer; }
 .hint { color: #999; font-size: 13px; margin-bottom: 10px; }
 hr { border: none; border-top: 1px solid #eee; margin: 12px 0; }
 </style>

@@ -1,6 +1,6 @@
 const { Router } = require('express')
 const { getTenantPool } = require('../config/database')
-const { requireRole } = require('../middleware/operator')
+const { validateId, writeGuard } = require('../utils')
 
 const router = Router()
 
@@ -9,12 +9,7 @@ router.use((req, res, next) => {
   next()
 })
 
-// Mutations require admin or operator
-const writeGuard = requireRole('admin', 'operator')
-router.use((req, res, next) => {
-  if (['POST', 'PUT', 'DELETE'].includes(req.method)) return writeGuard(req, res, next)
-  next()
-})
+writeGuard(router)
 
 // GET /api/warehouses
 router.get('/api/warehouses', async (req, res) => {
@@ -52,12 +47,6 @@ router.post('/api/warehouses', async (req, res) => {
   )
   res.status(201).json({ id: result.insertId })
 })
-
-function validateId(id) {
-  const n = parseInt(id, 10)
-  if (isNaN(n) || n < 1) return null
-  return n
-}
 
 // PUT /api/warehouses/:id
 router.put('/api/warehouses/:id', async (req, res) => {

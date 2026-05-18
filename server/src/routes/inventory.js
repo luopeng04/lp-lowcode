@@ -1,6 +1,7 @@
 const { Router } = require('express')
 const { getTenantPool } = require('../config/database')
 const { requireRole } = require('../middleware/operator')
+const { validateId, writeGuard } = require('../utils')
 
 const router = Router()
 
@@ -8,6 +9,8 @@ router.use((req, res, next) => {
   if (!req.tenant) return res.status(400).json({ error: '未提供租户标识' })
   next()
 })
+
+writeGuard(router)
 
 // GET /api/inventory
 router.get('/api/inventory', async (req, res) => {
@@ -40,7 +43,8 @@ router.get('/api/inventory', async (req, res) => {
 // PUT /api/inventory/:id/safety-stock
 router.put('/api/inventory/:id/safety-stock', requireRole('admin', 'operator'), async (req, res) => {
   const pool = getTenantPool(req.tenant.db_name)
-  const id = parseInt(req.params.id)
+  const id = validateId(req.params.id)
+  if (!id) return res.status(400).json({ error: '参数错误' })
   const { safety_stock } = req.body
   if (safety_stock === undefined) return res.status(400).json({ error: '安全库存量不能为空' })
 

@@ -2,6 +2,7 @@ const { Router } = require('express')
 const bcrypt = require('bcryptjs')
 const { getPlatformPool, getTenantPool } = require('../config/database')
 const { createTenantDatabase, seedTenantData } = require('../services/tenant-db')
+const loginLimiter = require('../middleware/rate-limiter')
 
 const router = Router()
 
@@ -66,7 +67,7 @@ router.post('/api/auth/register', async (req, res) => {
 })
 
 // POST /api/auth/login
-router.post('/api/auth/login', async (req, res) => {
+router.post('/api/auth/login', loginLimiter, async (req, res) => {
   try {
     const { phone, password, username } = req.body
 

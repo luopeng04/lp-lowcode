@@ -131,24 +131,9 @@ onMounted(fetchList)
 
 <style scoped>
 .page { max-width: 900px; }
-.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-h1 { font-size: 20px; }
-.btn-primary { padding: 8px 20px; background: #1a56db; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
-.search { width: 240px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; margin-bottom: 12px; }
-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 6px; overflow: hidden; }
-th, td { padding: 10px 14px; text-align: left; font-size: 14px; border-bottom: 1px solid #eee; }
-th { background: #f7f8fa; color: #555; font-weight: 600; }
-td button { margin-right: 6px; padding: 4px 10px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px; background: #fff; cursor: pointer; }
-.btn-danger { color: #d32; border-color: #ecc; }
-.empty { text-align: center; color: #999; padding: 40px; }
-
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.3); display: flex; align-items: center; justify-content: center; z-index: 100; }
-.modal { background: #fff; padding: 24px; border-radius: 8px; width: 400px; }
-.modal h2 { font-size: 17px; margin-bottom: 16px; }
-.modal label { display: block; font-size: 13px; color: #555; margin-bottom: 2px; }
-.modal input { width: 100%; padding: 7px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; margin-bottom: 10px; box-sizing: border-box; }
-.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
-.modal-actions button { padding: 7px 18px; font-size: 13px; border: 1px solid #ddd; border-radius: 4px; background: #fff; cursor: pointer; }
-.modal-actions .btn-primary { background: #1a56db; color: #fff; border: none; }
-.error { color: #d32; font-size: 13px; }
+.search { margin-bottom: 12px; }
+th, td { padding: 10px 14px; font-size: 14px; }
+.modal { width: 400px; }
+.modal input { margin-bottom: 10px; }
+.modal-actions { margin-top: 8px; }
 </style>

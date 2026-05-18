@@ -1,6 +1,6 @@
 const { Router } = require('express')
 const { getTenantPool } = require('../config/database')
-const { requireRole } = require('../middleware/operator')
+const { validateId, writeGuard } = require('../utils')
 
 const router = Router()
 
@@ -9,11 +9,7 @@ router.use((req, res, next) => {
   next()
 })
 
-const writeGuard = requireRole('admin', 'operator')
-router.use((req, res, next) => {
-  if (['POST', 'PUT', 'DELETE'].includes(req.method)) return writeGuard(req, res, next)
-  next()
-})
+writeGuard(router)
 
 // Generate order number: PO-yyyyMMdd-XXXX
 async function generateOrderNo(pool) {
@@ -51,14 +47,22 @@ router.get('/api/purchase-orders', async (req, res) => {
   params.push(parseInt(pageSize), offset)
 
   const [rows] = await pool.query(sql, params)
-  const [countResult] = await pool.query('SELECT COUNT(*) as total FROM purchase_orders')
-  res.json({ data: rows, total: countResult[0].total, page: parseInt(page), pageSize: parseInt(pageSize) })
+
+  let countSql = `SELECT COUNT(*) as total FROM purchase_orders po
+    LEFT JOIN suppliers s ON po.supplier_id = s.id
+    LEFT JOIN warehouses w ON po.warehouse_id = w.id WHERE 1=1`
+  const countParams = []
+  if (search) { countSql += ' AND (po.order_no LIKE ? OR s.name LIKE ?)'; countParams.push(`%${search}%`, `%${search}%`) }
+  if (status) { countSql += ' AND po.status = ?'; countParams.push(status) }
+  const [[{ total }]] = await pool.query(countSql, countParams)
+  res.json({ data: rows, total, page: parseInt(page), pageSize: parseInt(pageSize) })
 })
 
 // GET /api/purchase-orders/:id
 router.get('/api/purchase-orders/:id', async (req, res) => {
   const pool = getTenantPool(req.tenant.db_name)
-  const id = parseInt(req.params.id)
+  const id = validateId(req.params.id)
+  if (!id) return res.status(400).json({ error: '参数错误' })
 
   const [orders] = await pool.query(
     `SELECT po.*, s.name as supplier_name, w.name as warehouse_name
@@ -88,13 +92,22 @@ router.post('/api/purchase-orders', async (req, res) => {
     return res.status(400).json({ error: '供应商、仓库和商品明细不能为空' })
   }
 
-  const orderNo = await generateOrderNo(pool)
+  for (const item of items) {
+    if (!item.product_id || !item.quantity || item.quantity <= 0) {
+      return res.status(400).json({ error: '商品数量必须大于0' })
+    }
+    if (item.unit_price < 0) {
+      return res.status(400).json({ error: '单价不能为负数' })
+    }
+  }
+
   const totalAmount = items.reduce((sum, i) => sum + i.quantity * i.unit_price, 0)
 
   const conn = await pool.getConnection()
   try {
     await conn.beginTransaction()
 
+    const orderNo = await generateOrderNo(conn)
     const [result] = await conn.query(
       'INSERT INTO purchase_orders (order_no, supplier_id, warehouse_id, total_amount, ordered_at) VALUES (?,?,?,?,?)',
       [orderNo, supplier_id, warehouse_id, totalAmount, ordered_at || null]
@@ -121,7 +134,8 @@ router.post('/api/purchase-orders', async (req, res) => {
 // PUT /api/purchase-orders/:id/confirm (draft → confirmed)
 router.put('/api/purchase-orders/:id/confirm', async (req, res) => {
   const pool = getTenantPool(req.tenant.db_name)
-  const id = parseInt(req.params.id)
+  const id = validateId(req.params.id)
+  if (!id) return res.status(400).json({ error: '参数错误' })
 
   const [orders] = await pool.query('SELECT * FROM purchase_orders WHERE id = ?', [id])
   if (orders.length === 0) return res.status(404).json({ error: '采购单不存在' })
@@ -134,7 +148,8 @@ router.put('/api/purchase-orders/:id/confirm', async (req, res) => {
 // PUT /api/purchase-orders/:id/receive (confirmed → received, update inventory)
 router.put('/api/purchase-orders/:id/receive', async (req, res) => {
   const pool = getTenantPool(req.tenant.db_name)
-  const id = parseInt(req.params.id)
+  const id = validateId(req.params.id)
+  if (!id) return res.status(400).json({ error: '参数错误' })
 
   const [orders] = await pool.query('SELECT * FROM purchase_orders WHERE id = ?', [id])
   if (orders.length === 0) return res.status(404).json({ error: '采购单不存在' })

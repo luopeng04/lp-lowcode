@@ -1,6 +1,6 @@
 const { Router } = require('express')
 const { getTenantPool } = require('../config/database')
-const { requireRole } = require('../middleware/operator')
+const { validateId, writeGuard } = require('../utils')
 
 const router = Router()
 
@@ -9,11 +9,7 @@ router.use((req, res, next) => {
   next()
 })
 
-const writeGuard = requireRole('admin', 'operator')
-router.use((req, res, next) => {
-  if (['POST', 'PUT', 'DELETE'].includes(req.method)) return writeGuard(req, res, next)
-  next()
-})
+writeGuard(router)
 
 // GET /api/products
 router.get('/api/products', async (req, res) => {
@@ -63,6 +59,8 @@ router.post('/api/products', async (req, res) => {
   const { code, name, spec, unit, category, cost_price, sale_price, custom_data } = req.body
   if (!code || !name) return res.status(400).json({ error: '编码和名称不能为空' })
 
+  if (cost_price < 0 || sale_price < 0) return res.status(400).json({ error: '价格不能为负数' })
+
   const [dup] = await pool.query('SELECT id FROM products WHERE code = ?', [code])
   if (dup.length > 0) return res.status(409).json({ error: '商品编码已存在' })
 
@@ -77,8 +75,8 @@ router.post('/api/products', async (req, res) => {
 // PUT /api/products/:id
 router.put('/api/products/:id', async (req, res) => {
   const pool = getTenantPool(req.tenant.db_name)
-  const id = parseInt(req.params.id)
-  if (isNaN(id)) return res.status(400).json({ error: '参数错误' })
+  const id = validateId(req.params.id)
+  if (!id) return res.status(400).json({ error: '参数错误' })
 
   const { name, spec, unit, category, cost_price, sale_price, custom_data } = req.body
   const [existing] = await pool.query('SELECT id FROM products WHERE id = ? AND status = 1', [id])
@@ -102,8 +100,8 @@ router.put('/api/products/:id', async (req, res) => {
 // DELETE /api/products/:id
 router.delete('/api/products/:id', async (req, res) => {
   const pool = getTenantPool(req.tenant.db_name)
-  const id = parseInt(req.params.id)
-  if (isNaN(id)) return res.status(400).json({ error: '参数错误' })
+  const id = validateId(req.params.id)
+  if (!id) return res.status(400).json({ error: '参数错误' })
 
   const [existing] = await pool.query('SELECT id FROM products WHERE id = ? AND status = 1', [id])
   if (existing.length === 0) return res.status(404).json({ error: '商品不存在' })

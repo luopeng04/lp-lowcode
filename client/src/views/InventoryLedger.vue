@@ -95,18 +95,8 @@ onMounted(async () => { await loadMeta(); await fetchList() })
 </script>
 
 <style scoped>
-.page { max-width: 1100px; }
-h1 { font-size: 20px; margin-bottom: 16px; }
-.toolbar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; font-size: 13px; }
-.filter, select { padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 6px; overflow: hidden; }
-th, td { padding: 8px 12px; text-align: left; font-size: 13px; border-bottom: 1px solid #eee; }
-th { background: #f7f8fa; color: #555; font-weight: 600; }
+.toolbar { flex-wrap: wrap; font-size: 13px; }
 .in { color: #16a34a; font-weight: 600; }
 .out { color: #d32; font-weight: 600; }
-.empty { text-align: center; color: #999; padding: 40px; }
-.pager { display: flex; align-items: center; gap: 12px; margin-top: 16px; font-size: 13px; justify-content: center; }
-.pager button { padding: 4px 12px; border: 1px solid #ddd; border-radius: 4px; background: #fff; cursor: pointer; }
-.pager button:disabled { opacity: .4; cursor: not-allowed; }
 .btn-export { padding: 7px 16px; background: #16a34a; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
 </style>

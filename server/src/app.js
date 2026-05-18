@@ -21,8 +21,9 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
-// Auth routes don't need tenant middleware
+// Auth routes and health check don't need tenant middleware
 app.use(authRoutes)
+app.use(routes)
 
 app.use(tenantMiddleware)
 app.use(operatorMiddleware)
@@ -36,7 +37,6 @@ app.use(salesOrderRoutes)
 app.use(inventoryRoutes)
 app.use(exportRoutes)
 app.use(reportRoutes)
-app.use(routes)
 app.use(errorHandler)
 
 module.exports = app

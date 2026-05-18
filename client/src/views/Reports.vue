@@ -164,18 +164,12 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.page { max-width: 1100px; }
-h1 { font-size: 20px; margin-bottom: 16px; }
 .tabs { display: flex; gap: 4px; margin-bottom: 12px; }
 .tabs button { padding: 7px 16px; border: 1px solid #ddd; background: #fff; cursor: pointer; font-size: 13px; border-radius: 4px; }
 .tabs button.active { background: #1a56db; color: #fff; border-color: #1a56db; }
 .filters { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; font-size: 13px; }
 .filters input, .filters select { padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
-.btn-primary { padding: 6px 16px; background: #1a56db; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 6px; overflow: hidden; margin-bottom: 20px; }
-th, td { padding: 8px 12px; text-align: left; font-size: 13px; border-bottom: 1px solid #eee; }
-th { background: #f7f8fa; color: #555; font-weight: 600; }
-.empty { text-align: center; color: #999; padding: 40px; }
+table { margin-bottom: 20px; }
 .green { color: #16a34a; font-weight: 600; }
 .red { color: #d32; font-weight: 600; }
 .chart { margin-top: 8px; }
