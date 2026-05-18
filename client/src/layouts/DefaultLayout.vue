@@ -7,6 +7,7 @@
       </div>
       <nav>
         <router-link to="/">首页</router-link>
+        <router-link to="/warehouses">仓库管理</router-link>
       </nav>
       <div class="bottom">
         <a @click.prevent="logout" href="#">退出登录</a>

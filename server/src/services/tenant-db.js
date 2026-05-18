@@ -31,7 +31,7 @@ async function seedTenantData(tenantId, dbName, phone, passwordHash) {
 
   // Default warehouse
   await pool.query(
-    'INSERT INTO warehouses (code, name, address) VALUES (?, ?, ?)',
+    'INSERT INTO warehouses (code, name, address, is_default) VALUES (?, ?, ?, 1)',
     ['DEFAULT', '默认仓库', '']
   )
 

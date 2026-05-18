@@ -4,6 +4,7 @@ const tenantMiddleware = require('./middleware/tenant')
 const errorHandler = require('./middleware/error-handler')
 const routes = require('./routes')
 const authRoutes = require('./routes/auth')
+const warehouseRoutes = require('./routes/warehouses')
 
 const app = express()
 
@@ -14,6 +15,7 @@ app.use(express.json())
 app.use(authRoutes)
 
 app.use(tenantMiddleware)
+app.use(warehouseRoutes)
 app.use(routes)
 app.use(errorHandler)
 
