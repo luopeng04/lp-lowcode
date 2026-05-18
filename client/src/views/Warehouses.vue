@@ -5,7 +5,11 @@
       <button v-if="canWrite()" class="btn-primary" @click="openCreate">+ 新建仓库</button>
     </div>
 
-    <input v-model="search" @input="debouncedSearch" placeholder="搜索名称或编码..." class="search" />
+    <div class="toolbar">
+      <input v-model="search" @input="debouncedSearch" @keyup.enter="fetchList" placeholder="搜索名称或编码..." class="search" />
+      <button class="btn-secondary" @click="fetchList">查询</button>
+      <button class="btn-reset" @click="search='';fetchList()">重置</button>
+    </div>
 
     <table>
       <thead>
