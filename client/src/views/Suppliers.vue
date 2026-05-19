@@ -55,7 +55,7 @@
       </div>
     </div>
 
-    <ConfirmModal v-if="confirmMsg" :message="confirmMsg" @confirm="onConfirm" @cancel="confirmMsg = ''" />
+    <ConfirmModal v-if="confirmMsg" :message="confirmMsg" @confirm="onConfirm" @cancel="onCancel" />
   </div>
 </template>
 
@@ -64,17 +64,15 @@ import { ref, onMounted } from 'vue'
 import { getSuppliers, createSupplier, updateSupplier, deleteSupplier } from '../api.js'
 import ConfirmModal from '../components/ConfirmModal.vue'
 import { debounce, canWrite } from '../utils.js'
+import { useConfirm } from '../composables/useConfirm'
 
 const list = ref([]), search = ref(''), page = ref(1), total = ref(0), pageSize = 20
-
-function onSearch() {
-  page.value = 1
-  debouncedSearch()
-}
-const debouncedSearch = debounce(fetchList, 300)
+const { confirmMsg, askConfirm, onConfirm, onCancel } = useConfirm()
 const showModal = ref(false), editing = ref(null), saving = ref(false), error = ref('')
 const form = ref({ code: '', name: '', contact: '', phone: '', address: '', remark: '' })
-const confirmMsg = ref(''), confirmAction = ref(null)
+
+function onSearch() { page.value = 1; debouncedSearch() }
+const debouncedSearch = debounce(fetchList, 300)
 
 async function fetchList() {
   const data = await getSuppliers(search.value, page.value)
@@ -86,13 +84,11 @@ function openCreate() {
   form.value = { code: '', name: '', contact: '', phone: '', address: '', remark: '' }
   showModal.value = true
 }
-
 function openEdit(s) {
   editing.value = s; error.value = ''
   form.value = { code: s.code, name: s.name, contact: s.contact || '', phone: s.phone || '', address: s.address || '', remark: s.remark || '' }
   showModal.value = true
 }
-
 function closeModal() { showModal.value = false }
 
 async function handleSave() {
@@ -102,14 +98,6 @@ async function handleSave() {
     else await createSupplier(form.value)
     closeModal(); await fetchList()
   } catch (e) { error.value = e.message } finally { saving.value = false }
-}
-
-function askConfirm(msg, action) {
-  confirmMsg.value = msg; confirmAction.value = action
-}
-async function onConfirm() {
-  try { await confirmAction.value() } catch (e) { alert(e.message) }
-  confirmMsg.value = ''; await fetchList()
 }
 
 async function handleDelete(s) {

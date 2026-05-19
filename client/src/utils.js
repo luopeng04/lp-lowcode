@@ -1,3 +1,5 @@
+import { useAuthStore } from './stores/auth'
+
 export function debounce(fn, delay = 300) {
   let timer
   return function (...args) {
@@ -7,6 +9,10 @@ export function debounce(fn, delay = 300) {
 }
 
 export function canWrite() {
-  const operator = JSON.parse(localStorage.getItem('operator') || 'null')
-  return operator && (operator.role === 'admin' || operator.role === 'operator')
+  try {
+    return useAuthStore().canWrite
+  } catch {
+    const operator = JSON.parse(localStorage.getItem('operator') || 'null')
+    return operator && (operator.role === 'admin' || operator.role === 'operator')
+  }
 }

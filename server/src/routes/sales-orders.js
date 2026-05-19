@@ -1,6 +1,8 @@
 const { Router } = require('express')
 const { getTenantPool } = require('../config/database')
 const { validateId, writeGuard } = require('../utils')
+const { deductStock } = require('../services/inventory-engine')
+const { generateOrderNo, withTransaction } = require('../services/order-machine')
 
 const router = Router()
 
@@ -10,16 +12,6 @@ router.use((req, res, next) => {
 })
 
 writeGuard(router)
-
-async function generateOrderNo(pool) {
-  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-  const [rows] = await pool.query(
-    "SELECT order_no FROM sales_orders WHERE order_no LIKE ? ORDER BY id DESC LIMIT 1",
-    [`SO-${today}-%`]
-  )
-  const seq = rows.length > 0 ? parseInt(rows[0].order_no.slice(-4)) + 1 : 1
-  return `SO-${today}-${String(seq).padStart(4, '0')}`
-}
 
 // GET /api/sales-orders
 router.get('/api/sales-orders', async (req, res) => {
@@ -99,16 +91,13 @@ router.post('/api/sales-orders', async (req, res) => {
 
   const totalAmount = items.reduce((sum, i) => sum + i.quantity * i.unit_price, 0)
 
-  const conn = await pool.getConnection()
-  try {
-    await conn.beginTransaction()
-
-    const orderNo = await generateOrderNo(conn)
-    const [result] = await conn.query(
+  const result = await withTransaction(pool, async (conn) => {
+    const orderNo = await generateOrderNo(conn, { prefix: 'SO', table: 'sales_orders' })
+    const [insertResult] = await conn.query(
       'INSERT INTO sales_orders (order_no, customer_id, warehouse_id, total_amount, ordered_at) VALUES (?,?,?,?,?)',
       [orderNo, customer_id, warehouse_id, totalAmount, ordered_at || null]
     )
-    const orderId = result.insertId
+    const orderId = insertResult.insertId
 
     for (const item of items) {
       await conn.query(
@@ -117,14 +106,9 @@ router.post('/api/sales-orders', async (req, res) => {
       )
     }
 
-    await conn.commit()
-    res.status(201).json({ id: orderId, order_no: orderNo })
-  } catch (err) {
-    await conn.rollback()
-    throw err
-  } finally {
-    conn.release()
-  }
+    return { id: orderId, order_no: orderNo }
+  })
+  res.status(201).json(result)
 })
 
 // PUT /api/sales-orders/:id/confirm
@@ -154,51 +138,19 @@ router.put('/api/sales-orders/:id/deliver', async (req, res) => {
   const order = orders[0]
   const [items] = await pool.query('SELECT * FROM sales_order_items WHERE order_id = ?', [id])
 
-  const conn = await pool.getConnection()
-  try {
-    await conn.beginTransaction()
-
+  await withTransaction(pool, async (conn) => {
     for (const item of items) {
-      const [invs] = await conn.query(
-        'SELECT quantity, avg_cost FROM inventories WHERE product_id = ? AND warehouse_id = ?',
-        [item.product_id, order.warehouse_id]
-      )
-
-      if (invs.length === 0) {
-        throw new Error(`商品库存不存在`)
-      }
-
-      const inv = invs[0]
-      if (parseFloat(inv.quantity) < parseFloat(item.quantity)) {
-        throw new Error(`库存不足，当前库存: ${inv.quantity}`)
-      }
-
-      const newQty = parseFloat(inv.quantity) - parseFloat(item.quantity)
-      const costPrice = parseFloat(inv.avg_cost) // 按当前均价计算出库成本
-
-      await conn.query(
-        'UPDATE inventories SET quantity = ? WHERE product_id = ? AND warehouse_id = ?',
-        [newQty, item.product_id, order.warehouse_id]
-      )
-
-      // Record inventory ledger — deduct at current avg cost
-      await conn.query(
-        "INSERT INTO inventory_ledgers (product_id, warehouse_id, type, quantity, cost_price, order_type, order_id) VALUES (?,?,?,?,?,?,?)",
-        [item.product_id, order.warehouse_id, 'out', item.quantity, costPrice, 'sale', id]
-      )
+      await deductStock(conn, {
+        productId: item.product_id,
+        warehouseId: order.warehouse_id,
+        qty: item.quantity,
+        orderType: 'sale',
+        orderId: id,
+      })
     }
-
     await conn.query("UPDATE sales_orders SET status = 'delivered' WHERE id = ?", [id])
-    await conn.commit()
-    res.json({ ok: true })
-  } catch (err) {
-    await conn.rollback()
-    // Business errors (stock insufficient, etc.) have no code → 400; system errors → 500
-    if (err.code) throw err
-    res.status(400).json({ error: err.message })
-  } finally {
-    conn.release()
-  }
+  })
+  res.json({ ok: true })
 })
 
 module.exports = router

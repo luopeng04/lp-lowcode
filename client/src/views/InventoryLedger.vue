@@ -58,6 +58,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAuthStore } from '../stores/auth'
 import { getInventoryLedgers, getWarehouses, getProducts } from '../api.js'
 
 const list = ref([]), page = ref(1), total = ref(0), pageSize = 20
@@ -82,7 +83,7 @@ async function loadMeta() {
 }
 
 async function exportCSV() {
-  const tenant = JSON.parse(localStorage.getItem('tenant') || '{}')
+  const auth = useAuthStore()
   const params = new URLSearchParams()
   if (startDate.value) params.set('start_date', startDate.value)
   if (endDate.value) params.set('end_date', endDate.value)
@@ -90,7 +91,7 @@ async function exportCSV() {
   if (typeFilter.value) params.set('type', typeFilter.value)
   if (productFilter.value) params.set('product_id', productFilter.value)
   const res = await fetch(`/api/export/inventory-ledger?${params}`, {
-    headers: { 'X-Tenant-Id': String(tenant.id) }
+    headers: { 'X-Tenant-Id': String(auth.tenant.id) }
   })
   const blob = await res.blob()
   const url = URL.createObjectURL(blob)

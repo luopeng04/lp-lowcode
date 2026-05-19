@@ -2,9 +2,9 @@
   <div class="app-shell">
     <aside class="sidebar">
       <div class="logo">lp 进销存</div>
-      <div class="tenant-info" v-if="tenant">
-        <span>{{ tenant.name }}</span>
-        <small>{{ roleLabel }}</small>
+      <div class="tenant-info" v-if="auth.tenant">
+        <span>{{ auth.tenant.name }}</span>
+        <small>{{ auth.roleLabel }}</small>
       </div>
       <nav>
         <router-link v-for="m in visibleMenus" :key="m.path" :to="m.path">{{ m.label }}</router-link>
@@ -20,12 +20,12 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 
 const router = useRouter()
-const tenant = ref(JSON.parse(localStorage.getItem('tenant') || 'null'))
-const operator = ref(JSON.parse(localStorage.getItem('operator') || 'null'))
+const auth = useAuthStore()
 
 const allMenus = [
   { path: '/', label: '首页', roles: ['admin', 'operator', 'readonly'] },
@@ -42,18 +42,12 @@ const allMenus = [
 ]
 
 const visibleMenus = computed(() => {
-  const role = operator.value?.role || 'readonly'
+  const role = auth.operator?.role || 'readonly'
   return allMenus.filter(m => m.roles.includes(role))
 })
 
-const roleLabel = computed(() => {
-  const map = { admin: '管理员', operator: '操作员', readonly: '只读' }
-  return map[operator.value?.role] || ''
-})
-
 function logout() {
-  localStorage.removeItem('tenant')
-  localStorage.removeItem('operator')
+  auth.logout()
   router.push('/login')
 }
 </script>

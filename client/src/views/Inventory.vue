@@ -82,6 +82,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAuthStore } from '../stores/auth'
 import { getInventory, updateSafetyStock, getWarehouses, doInventoryCheck } from '../api.js'
 import { debounce, canWrite } from '../utils.js'
 
@@ -137,13 +138,13 @@ async function submitCheck() {
 }
 
 async function exportCSV() {
-  const tenant = JSON.parse(localStorage.getItem('tenant') || '{}')
+  const auth = useAuthStore()
   const params = new URLSearchParams()
   if (warehouseFilter.value) params.set('warehouse_id', warehouseFilter.value)
   if (categoryFilter.value) params.set('category', categoryFilter.value)
   if (search.value) params.set('search', search.value)
   const res = await fetch(`/api/export/inventory?${params}`, {
-    headers: { 'X-Tenant-Id': String(tenant.id) }
+    headers: { 'X-Tenant-Id': String(auth.tenant.id) }
   })
   const blob = await res.blob()
   const url = URL.createObjectURL(blob)

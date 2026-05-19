@@ -32,9 +32,11 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 import { login } from '../api.js'
 
 const router = useRouter()
+const auth = useAuthStore()
 const phone = ref('')
 const username = ref('')
 const password = ref('')
@@ -47,8 +49,7 @@ async function handleLogin() {
   loading.value = true
   try {
     const data = await login(phone.value, password.value, username.value || undefined)
-    localStorage.setItem('tenant', JSON.stringify(data.tenant))
-    localStorage.setItem('operator', JSON.stringify(data.operator))
+    auth.setAuth(data.tenant, data.operator)
     router.push('/')
   } catch (e) {
     error.value = e.message

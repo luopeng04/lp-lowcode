@@ -3,7 +3,7 @@
     <div class="header">
       <div>
         <h1>lp 进销存</h1>
-        <p class="page-desc">欢迎回来，{{ tenant?.name || '商户' }}</p>
+        <p class="page-desc">欢迎回来，{{ auth.tenant?.name || '商户' }}</p>
       </div>
     </div>
 
@@ -52,9 +52,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAuthStore } from '../stores/auth'
 import { getProducts, getWarehouses, getPurchaseOrders, getSalesOrders } from '../api.js'
 
-const tenant = ref(JSON.parse(localStorage.getItem('tenant') || 'null'))
+const auth = useAuthStore()
 
 const stats = ref({
   productCount: 0,

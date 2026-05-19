@@ -159,3 +159,13 @@ td button.btn-danger:hover { background: var(--color-danger-light); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* Print styles */
+@media print {
+  .sidebar, .actions, .back, .bottom, .btn-primary, .btn-success, button { display: none !important; }
+  .main { padding: 0 !important; background: #fff !important; }
+  .card, .modal { border: none !important; padding: 0 !important; box-shadow: none !important; }
+  .header h1 { font-size: 22px; }
+  table th { background: #eee !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .status-draft, .status-confirmed, .status-received, .status-delivered { background: none !important; padding: 0; }
+}

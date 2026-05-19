@@ -1,11 +1,28 @@
+import { useAuthStore } from './stores/auth'
+
 const BASE = '/api'
 
+function getAuthHeaders() {
+  // Must be called inside a component setup or we fall back to localStorage
+  try {
+    const auth = useAuthStore()
+    const headers = {}
+    if (auth.tenant) headers['X-Tenant-Id'] = String(auth.tenant.id)
+    if (auth.operator) headers['X-Operator-Id'] = String(auth.operator.id)
+    return headers
+  } catch {
+    const tenant = JSON.parse(localStorage.getItem('tenant') || 'null')
+    const operator = JSON.parse(localStorage.getItem('operator') || 'null')
+    const headers = {}
+    if (tenant) headers['X-Tenant-Id'] = String(tenant.id)
+    if (operator) headers['X-Operator-Id'] = String(operator.id)
+    return headers
+  }
+}
+
 async function request(path, options = {}) {
-  const tenant = JSON.parse(localStorage.getItem('tenant') || 'null')
-  const operator = JSON.parse(localStorage.getItem('operator') || 'null')
-  const headers = { 'Content-Type': 'application/json', ...options.headers }
-  if (tenant) headers['X-Tenant-Id'] = String(tenant.id)
-  if (operator) headers['X-Operator-Id'] = String(operator.id)
+  const authHeaders = getAuthHeaders()
+  const headers = { 'Content-Type': 'application/json', ...authHeaders, ...options.headers }
 
   const res = await fetch(`${BASE}${path}`, { headers, ...options })
   const data = await res.json()

@@ -1,6 +1,8 @@
 const { Router } = require('express')
 const { getTenantPool } = require('../config/database')
 const { validateId, writeGuard } = require('../utils')
+const { receiveStock } = require('../services/inventory-engine')
+const { generateOrderNo, withTransaction } = require('../services/order-machine')
 
 const router = Router()
 
@@ -10,17 +12,6 @@ router.use((req, res, next) => {
 })
 
 writeGuard(router)
-
-// Generate order number: PO-yyyyMMdd-XXXX
-async function generateOrderNo(pool) {
-  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-  const [rows] = await pool.query(
-    "SELECT order_no FROM purchase_orders WHERE order_no LIKE ? ORDER BY id DESC LIMIT 1",
-    [`PO-${today}-%`]
-  )
-  const seq = rows.length > 0 ? parseInt(rows[0].order_no.slice(-4)) + 1 : 1
-  return `PO-${today}-${String(seq).padStart(4, '0')}`
-}
 
 // GET /api/purchase-orders
 router.get('/api/purchase-orders', async (req, res) => {
@@ -103,16 +94,13 @@ router.post('/api/purchase-orders', async (req, res) => {
 
   const totalAmount = items.reduce((sum, i) => sum + i.quantity * i.unit_price, 0)
 
-  const conn = await pool.getConnection()
-  try {
-    await conn.beginTransaction()
-
-    const orderNo = await generateOrderNo(conn)
-    const [result] = await conn.query(
+  const result = await withTransaction(pool, async (conn) => {
+    const orderNo = await generateOrderNo(conn, { prefix: 'PO', table: 'purchase_orders' })
+    const [insertResult] = await conn.query(
       'INSERT INTO purchase_orders (order_no, supplier_id, warehouse_id, total_amount, ordered_at) VALUES (?,?,?,?,?)',
       [orderNo, supplier_id, warehouse_id, totalAmount, ordered_at || null]
     )
-    const orderId = result.insertId
+    const orderId = insertResult.insertId
 
     for (const item of items) {
       await conn.query(
@@ -121,14 +109,9 @@ router.post('/api/purchase-orders', async (req, res) => {
       )
     }
 
-    await conn.commit()
-    res.status(201).json({ id: orderId, order_no: orderNo })
-  } catch (err) {
-    await conn.rollback()
-    throw err
-  } finally {
-    conn.release()
-  }
+    return { id: orderId, order_no: orderNo }
+  })
+  res.status(201).json(result)
 })
 
 // PUT /api/purchase-orders/:id/confirm (draft → confirmed)
@@ -158,52 +141,20 @@ router.put('/api/purchase-orders/:id/receive', async (req, res) => {
   const order = orders[0]
   const [items] = await pool.query('SELECT * FROM purchase_order_items WHERE order_id = ?', [id])
 
-  const conn = await pool.getConnection()
-  try {
-    await conn.beginTransaction()
-
+  await withTransaction(pool, async (conn) => {
     for (const item of items) {
-      // Get current inventory
-      const [invs] = await conn.query(
-        'SELECT quantity, avg_cost FROM inventories WHERE product_id = ? AND warehouse_id = ?',
-        [item.product_id, order.warehouse_id]
-      )
-
-      if (invs.length > 0) {
-        const inv = invs[0]
-        const newQty = parseFloat(inv.quantity) + parseFloat(item.quantity)
-        // Weighted average cost
-        const oldAmount = parseFloat(inv.quantity) * parseFloat(inv.avg_cost)
-        const inAmount = parseFloat(item.quantity) * parseFloat(item.unit_price)
-        const newAvg = (oldAmount + inAmount) / newQty
-
-        await conn.query(
-          'UPDATE inventories SET quantity = ?, avg_cost = ? WHERE product_id = ? AND warehouse_id = ?',
-          [newQty, newAvg, item.product_id, order.warehouse_id]
-        )
-      } else {
-        await conn.query(
-          'INSERT INTO inventories (product_id, warehouse_id, quantity, avg_cost) VALUES (?,?,?,?)',
-          [item.product_id, order.warehouse_id, item.quantity, item.unit_price]
-        )
-      }
-
-      // Record inventory ledger
-      await conn.query(
-        "INSERT INTO inventory_ledgers (product_id, warehouse_id, type, quantity, cost_price, order_type, order_id) VALUES (?,?,?,?,?,?,?)",
-        [item.product_id, order.warehouse_id, 'in', item.quantity, item.unit_price, 'purchase', id]
-      )
+      await receiveStock(conn, {
+        productId: item.product_id,
+        warehouseId: order.warehouse_id,
+        qty: item.quantity,
+        costPrice: item.unit_price,
+        orderType: 'purchase',
+        orderId: id,
+      })
     }
-
     await conn.query("UPDATE purchase_orders SET status = 'received' WHERE id = ?", [id])
-    await conn.commit()
-    res.json({ ok: true })
-  } catch (err) {
-    await conn.rollback()
-    throw err
-  } finally {
-    conn.release()
-  }
+  })
+  res.json({ ok: true })
 })
 
 module.exports = router

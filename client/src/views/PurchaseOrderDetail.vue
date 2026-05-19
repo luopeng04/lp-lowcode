@@ -89,18 +89,9 @@ h3 { font-size: var(--font-size-md); font-weight: var(--font-weight-semibold); m
 .info span { font-size: 15px; }
 .amount { color: var(--color-danger); font-weight: var(--font-weight-semibold); }
 .actions { margin-top: var(--space-lg); display: flex; gap: 10px; }
-.btn-primary { padding: 8px 24px; background: var(--color-primary); color: #fff; border: none; border-radius: var(--radius-sm); cursor: pointer; font-size: var(--font-size-md); font-family: var(--font-family); transition: background var(--transition-fast); }
-.btn-primary:hover { background: var(--color-primary-hover); }
-.btn-success { padding: 8px 24px; background: var(--color-success); color: #fff; border: none; border-radius: var(--radius-sm); cursor: pointer; font-size: var(--font-size-md); font-family: var(--font-family); transition: background var(--transition-fast); }
-.btn-success:hover { background: var(--color-success-hover); }
+.btn-primary, .btn-success { padding: 8px 24px; }
 
 @media print {
-  .sidebar, .actions, .back, .bottom { display: none !important; }
-  .main { padding: 0 !important; background: #fff !important; }
-  .card { border: none; padding: 0; }
-  .header h1 { font-size: 22px; }
   .info label { color: #555; }
-  table th { background: #eee; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .status-received, .status-confirmed, .status-draft { background: none !important; padding: 0; }
 }
 </style>
