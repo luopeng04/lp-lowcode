@@ -37,7 +37,7 @@
           <td>{{ l.product_name }}</td><td>{{ l.warehouse_name }}</td>
           <td :class="l.type === 'in' ? 'in' : 'out'">{{ l.type === 'in' ? '入库' : '出库' }}</td>
           <td>{{ l.quantity }}</td><td>{{ l.cost_price }}</td>
-          <td>{{ l.order_type }}-{{ l.order_id }}</td>
+          <td>{{ l.order_no }}</td>
         </tr>
         <tr v-if="list.length === 0"><td colspan="7" class="empty">暂无数据</td></tr>
       </tbody>

@@ -55,10 +55,12 @@ router.get('/api/export/inventory-ledger', async (req, res) => {
   let sql = `SELECT il.created_at as 时间, p.name as 商品, p.code as 编码,
     w.name as 仓库, CASE il.type WHEN 'in' THEN '入库' ELSE '出库' END as 方向,
     il.quantity as 数量, il.cost_price as 成本价,
-    CONCAT(il.order_type, '-', il.order_id) as 关联单据
+    COALESCE(po.order_no, so.order_no, '盘点调整') as 关联单据
     FROM inventory_ledgers il
     JOIN products p ON il.product_id = p.id
     JOIN warehouses w ON il.warehouse_id = w.id
+    LEFT JOIN purchase_orders po ON il.order_type = 'purchase' AND il.order_id = po.id
+    LEFT JOIN sales_orders so ON il.order_type = 'sale' AND il.order_id = so.id
     WHERE 1=1`
   const params = []
 

@@ -57,10 +57,13 @@ router.get('/api/inventory-ledgers', async (req, res) => {
   const { product_id, warehouse_id, type, start_date, end_date, page = 1, pageSize = 20 } = req.query
   const offset = (parseInt(page) - 1) * parseInt(pageSize)
 
-  let sql = `SELECT il.*, p.name as product_name, p.code as product_code, w.name as warehouse_name
+  let sql = `SELECT il.*, p.name as product_name, p.code as product_code, w.name as warehouse_name,
+      COALESCE(po.order_no, so.order_no, '盘点调整') as order_no
     FROM inventory_ledgers il
     JOIN products p ON il.product_id = p.id
     JOIN warehouses w ON il.warehouse_id = w.id
+    LEFT JOIN purchase_orders po ON il.order_type = 'purchase' AND il.order_id = po.id
+    LEFT JOIN sales_orders so ON il.order_type = 'sale' AND il.order_id = so.id
     WHERE 1=1`
   const params = []
 
