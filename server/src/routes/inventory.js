@@ -32,9 +32,13 @@ router.get('/api/inventory', async (req, res) => {
   params.push(parseInt(pageSize), offset)
 
   const [rows] = await pool.query(sql, params)
-  const [[{ total }]] = await pool.query(
-    'SELECT COUNT(*) as total FROM inventories i JOIN products p ON i.product_id = p.id'
-  )
+
+  let countSql = 'SELECT COUNT(*) as total FROM inventories i JOIN products p ON i.product_id = p.id WHERE 1=1'
+  const countParams = []
+  if (warehouse_id) { countSql += ' AND i.warehouse_id = ?'; countParams.push(warehouse_id) }
+  if (category) { countSql += ' AND p.category = ?'; countParams.push(category) }
+  if (search) { countSql += ' AND (p.name LIKE ? OR p.code LIKE ?)'; countParams.push(`%${search}%`, `%${search}%`) }
+  const [[{ total }]] = await pool.query(countSql, countParams)
 
   res.json({ data: rows, total, page: parseInt(page), pageSize: parseInt(pageSize) })
 })
@@ -78,9 +82,14 @@ router.get('/api/inventory-ledgers', async (req, res) => {
 
   const [rows] = await pool.query(sql, params)
 
-  const [[{ total }]] = await pool.query(
-    'SELECT COUNT(*) as total FROM inventory_ledgers il JOIN products p ON il.product_id = p.id'
-  )
+  let countSql = 'SELECT COUNT(*) as total FROM inventory_ledgers il JOIN products p ON il.product_id = p.id WHERE 1=1'
+  const countParams = []
+  if (product_id) { countSql += ' AND il.product_id = ?'; countParams.push(product_id) }
+  if (warehouse_id) { countSql += ' AND il.warehouse_id = ?'; countParams.push(warehouse_id) }
+  if (type) { countSql += ' AND il.type = ?'; countParams.push(type) }
+  if (start_date) { countSql += ' AND il.created_at >= ?'; countParams.push(start_date) }
+  if (end_date) { countSql += ' AND il.created_at <= ?'; countParams.push(end_date + ' 23:59:59') }
+  const [[{ total }]] = await pool.query(countSql, countParams)
 
   res.json({ data: rows, total, page: parseInt(page), pageSize: parseInt(pageSize) })
 })
@@ -133,7 +142,8 @@ router.post('/api/inventory-check', async (req, res) => {
     res.json({ results })
   } catch (err) {
     await conn.rollback()
-    throw err
+    console.error('[inventory-check]', err)
+    res.status(500).json({ error: '盘点失败，请稍后重试' })
   } finally {
     conn.release()
   }

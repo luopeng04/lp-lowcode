@@ -2,9 +2,17 @@ const { Router } = require('express')
 const { getTenantPool } = require('../config/database')
 const { validateId, writeGuard } = require('../utils')
 
-function createCrudRoutes({ table, fields, searchFields, entityName }) {
+function createCrudRoutes({ table, fields, searchFields, entityName, jsonFields = [] }) {
   const router = Router()
   const label = entityName || table
+
+  function parseJson(row) {
+    const parsed = { ...row }
+    for (const f of jsonFields) {
+      parsed[f] = row[f] ? (typeof row[f] === 'string' ? JSON.parse(row[f]) : row[f]) : {}
+    }
+    return parsed
+  }
 
   router.use((req, res, next) => {
     if (!req.tenant) return res.status(400).json({ error: '未提供租户标识' })
@@ -30,6 +38,7 @@ function createCrudRoutes({ table, fields, searchFields, entityName }) {
     params.push(parseInt(pageSize), offset)
 
     const [rows] = await pool.query(sql, params)
+    const data = rows.map(parseJson)
 
     let countSql = `SELECT COUNT(*) as total FROM ${table} WHERE status = 1`
     const countParams = []
@@ -40,7 +49,7 @@ function createCrudRoutes({ table, fields, searchFields, entityName }) {
     }
     const [[{ total }]] = await pool.query(countSql, countParams)
 
-    res.json({ data: rows, total, page: parseInt(page), pageSize: parseInt(pageSize) })
+    res.json({ data, total, page: parseInt(page), pageSize: parseInt(pageSize) })
   })
 
   // POST create
@@ -52,7 +61,11 @@ function createCrudRoutes({ table, fields, searchFields, entityName }) {
     const [dup] = await pool.query(`SELECT id FROM ${table} WHERE ${fields[0]} = ?`, [req.body[fields[0]]])
     if (dup.length > 0) return res.status(409).json({ error: `${label}已存在` })
 
-    const values = fields.map(f => req.body[f] || '')
+    const values = fields.map(f => {
+      const val = req.body[f]
+      if (jsonFields.includes(f)) return val ? JSON.stringify(val) : null
+      return val || ''
+    })
     const placeholders = fields.map(() => '?').join(',')
     const [result] = await pool.query(
       `INSERT INTO ${table} (${fields.join(',')}) VALUES (${placeholders})`,
@@ -72,7 +85,9 @@ function createCrudRoutes({ table, fields, searchFields, entityName }) {
 
     const updates = {}
     for (const f of fields.slice(1)) {
-      if (req.body[f] !== undefined) updates[f] = req.body[f]
+      if (req.body[f] !== undefined) {
+        updates[f] = jsonFields.includes(f) ? JSON.stringify(req.body[f]) : req.body[f]
+      }
     }
     if (Object.keys(updates).length > 0) {
       await pool.query(`UPDATE ${table} SET ? WHERE id = ?`, [updates, id])

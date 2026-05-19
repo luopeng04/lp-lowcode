@@ -7,7 +7,8 @@
       <ul>
         <li>默认仓库已创建</li>
         <li>管理员账号已就绪</li>
-        <li>进销存模板已加载</li>
+        <li v-if="industryName">行业模板已应用：{{ industryName }}</li>
+        <li v-else>通用模板已加载</li>
       </ul>
       <button @click="goHome">进入系统</button>
     </div>
@@ -15,9 +16,11 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
+const route = useRoute()
+const industryName = route.query.industryName || ''
 
 function goHome() {
   router.push('/login')

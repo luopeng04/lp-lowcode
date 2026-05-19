@@ -36,7 +36,7 @@
           <tr v-for="r in data" :key="r.period">
             <td>{{ r.period }}</td><td>{{ r.order_count }}</td><td>{{ r.total_qty }}</td><td>{{ r.total_amount }}</td>
           </tr>
-          <tr v-if="data.length === 0"><td colspan="4" class="empty">暂无数据</td></tr>
+          <tr v-if="data.length === 0"><td colspan="4" :class="loading ? 'loading-row' : 'empty'">{{ loading ? '加载中...' : '暂无数据' }}</td></tr>
         </tbody>
       </table></div>
       <!-- Bar chart -->
@@ -59,7 +59,7 @@
             <td :class="{ green: r.profit > 0, red: r.profit < 0 }">{{ r.profit }}</td>
             <td>{{ r.revenue > 0 ? ((r.profit / r.revenue) * 100).toFixed(1) + '%' : '-' }}</td>
           </tr>
-          <tr v-if="data.length === 0"><td colspan="6" class="empty">暂无数据</td></tr>
+          <tr v-if="data.length === 0"><td colspan="6" :class="loading ? 'loading-row' : 'empty'">{{ loading ? '加载中...' : '暂无数据' }}</td></tr>
         </tbody>
       </table></div>
       <!-- Bar chart -->
@@ -80,7 +80,7 @@
           <tr v-for="r in data" :key="r.supplier_name + r.product_name">
             <td>{{ r.supplier_name }}</td><td>{{ r.product_name }}</td><td>{{ r.order_count }}</td><td>{{ r.total_qty }}</td><td>{{ r.total_amount }}</td>
           </tr>
-          <tr v-if="data.length === 0"><td colspan="5" class="empty">暂无数据</td></tr>
+          <tr v-if="data.length === 0"><td colspan="5" :class="loading ? 'loading-row' : 'empty'">{{ loading ? '加载中...' : '暂无数据' }}</td></tr>
         </tbody>
       </table></div>
     </div>
@@ -93,7 +93,7 @@
           <tr v-for="r in data" :key="r.product_name + r.warehouse_name">
             <td>{{ r.product_name }}</td><td>{{ r.warehouse_name }}</td><td>{{ r.total_in }}</td><td>{{ r.total_out }}</td><td>{{ r.tx_count }}</td>
           </tr>
-          <tr v-if="data.length === 0"><td colspan="5" class="empty">暂无数据</td></tr>
+          <tr v-if="data.length === 0"><td colspan="5" :class="loading ? 'loading-row' : 'empty'">{{ loading ? '加载中...' : '暂无数据' }}</td></tr>
         </tbody>
       </table></div>
     </div>
@@ -111,12 +111,13 @@ const tabs = [
   { key: 'purchase', label: '采购汇总' },
   { key: 'turnover', label: '库存周转' },
 ]
-const data = ref([])
+const data = ref([]), loading = ref(true)
 const startDate = ref(''), endDate = ref(''), period = ref('day')
 const warehouseFilter = ref(''), productFilter = ref('')
 const warehouses = ref([]), products = ref([])
 
 async function load() {
+  loading.value = true
   const params = {}
   if (startDate.value) params.start_date = startDate.value
   if (endDate.value) params.end_date = endDate.value
@@ -138,7 +139,7 @@ async function load() {
   }
 
   const json = await getReport(path, params)
-  data.value = json.data
+  data.value = json.data; loading.value = false
 }
 
 function barWidth(val) {

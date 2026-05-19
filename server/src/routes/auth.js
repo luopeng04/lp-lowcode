@@ -9,7 +9,7 @@ const router = Router()
 // POST /api/auth/register
 router.post('/api/auth/register', async (req, res) => {
   try {
-    const { phone, password, name } = req.body
+    const { phone, password, name, industry } = req.body
 
     if (!phone || !password) {
       return res.status(400).json({ error: '手机号和密码不能为空' })
@@ -43,9 +43,10 @@ router.post('/api/auth/register', async (req, res) => {
     const tenantId = result.insertId
 
     // Create database + seed data
+    let seedResult
     try {
       await createTenantDatabase(dbName)
-      await seedTenantData(tenantId, dbName, phone, passwordHash)
+      seedResult = await seedTenantData(tenantId, dbName, phone, passwordHash, industry || 'general')
     } catch (err) {
       // Rollback: delete tenant record and drop database
       await platform.query('DELETE FROM tenants WHERE id = ?', [tenantId])
@@ -60,6 +61,7 @@ router.post('/api/auth/register', async (req, res) => {
         phone,
         dbName,
       },
+      industry: seedResult?.industry,
     })
   } catch (err) {
     console.error('[register]', err)

@@ -43,7 +43,7 @@
             <span v-else class="text-muted">盘点调整</span>
           </td>
         </tr>
-        <tr v-if="list.length === 0"><td colspan="7" class="empty">暂无数据</td></tr>
+        <tr v-if="list.length === 0"><td colspan="7" :class="loading ? 'loading-row' : 'empty'">{{ loading ? '加载中...' : '暂无数据' }}</td></tr>
       </tbody>
     </table>
     </div>
@@ -61,11 +61,12 @@ import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { getInventoryLedgers, getWarehouses, getProducts } from '../api.js'
 
-const list = ref([]), page = ref(1), total = ref(0), pageSize = 20
+const list = ref([]), page = ref(1), total = ref(0), pageSize = 20, loading = ref(true)
 const startDate = ref(''), endDate = ref(''), warehouseFilter = ref(''), typeFilter = ref(''), productFilter = ref('')
 const warehouses = ref([]), products = ref([])
 
 async function fetchList() {
+  loading.value = true
   const data = await getInventoryLedgers({
     start_date: startDate.value || undefined,
     end_date: endDate.value || undefined,
@@ -74,7 +75,7 @@ async function fetchList() {
     product_id: productFilter.value || undefined,
     page: page.value,
   })
-  list.value = data.data; total.value = data.total
+  list.value = data.data; total.value = data.total; loading.value = false
 }
 
 async function loadMeta() {

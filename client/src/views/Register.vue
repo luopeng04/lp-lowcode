@@ -9,8 +9,20 @@
         <label>商户名称（选填）</label>
         <input v-model="name" placeholder="商户名称" />
 
+        <label>行业类型（选填，默认通用）</label>
+        <select v-model="industry">
+          <option value="general">通用</option>
+          <option value="retail">零售</option>
+          <option value="wholesale">批发</option>
+          <option value="catering">餐饮</option>
+          <option value="clothing">服装</option>
+        </select>
+
         <label>密码</label>
         <input v-model="password" type="password" placeholder="至少6位密码" />
+
+        <label>确认密码</label>
+        <input v-model="confirmPassword" type="password" placeholder="再次输入密码" />
 
         <p v-if="error" class="error">{{ error }}</p>
 
@@ -33,16 +45,32 @@ import { register } from '../api.js'
 const router = useRouter()
 const phone = ref('')
 const name = ref('')
+const industry = ref('general')
 const password = ref('')
+const confirmPassword = ref('')
 const error = ref('')
 const loading = ref(false)
 
 async function handleRegister() {
   error.value = ''
+  if (!phone.value.trim()) { error.value = '请输入手机号'; return }
+  if (!/^1[3-9]\d{9}$/.test(phone.value.trim())) { error.value = '手机号格式不正确'; return }
+  if (!password.value) { error.value = '请输入密码'; return }
+  if (password.value.length < 6) { error.value = '密码至少6位'; return }
+  if (password.value !== confirmPassword.value) { error.value = '两次密码输入不一致'; return }
+
   loading.value = true
   try {
-    const data = await register(phone.value, password.value, name.value)
-    router.push({ name: 'onboarding', query: { tenantId: data.tenant.id, dbName: data.tenant.dbName } })
+    const data = await register(phone.value.trim(), password.value, name.value.trim(), industry.value)
+    router.push({
+      name: 'onboarding',
+      query: {
+        tenantId: data.tenant.id,
+        dbName: data.tenant.dbName,
+        industry: data.industry?.code || 'general',
+        industryName: data.industry?.name || '通用',
+      },
+    })
   } catch (e) {
     error.value = e.message
   } finally {
@@ -74,6 +102,13 @@ input {
   transition: border-color var(--transition-fast);
 }
 input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 2px var(--color-primary-light); }
+select {
+  width: 100%; padding: 8px 12px; border: 1px solid var(--border-default); border-radius: var(--radius-sm);
+  font-size: var(--font-size-md); box-sizing: border-box; font-family: var(--font-family);
+  background: var(--bg-surface); transition: border-color var(--transition-fast);
+  appearance: none; -webkit-appearance: none;
+}
+select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 2px var(--color-primary-light); }
 button {
   width: 100%; margin-top: 20px; padding: 10px; background: var(--color-primary);
   color: #fff; border: none; border-radius: var(--radius-sm); font-size: 15px; cursor: pointer;

@@ -33,7 +33,7 @@
           <td>{{ (r.quantity * r.avg_cost).toFixed(2) }}</td>
           <td v-if="canWrite()"><button @click="openSafety(r)">设置安全库存</button></td>
         </tr>
-        <tr v-if="list.length === 0"><td colspan="9" class="empty">暂无数据</td></tr>
+        <tr v-if="list.length === 0"><td colspan="9" :class="loading ? 'loading-row' : 'empty'">{{ loading ? '加载中...' : '暂无数据' }}</td></tr>
       </tbody>
     </table>
     </div>
@@ -87,16 +87,17 @@ import { getInventory, updateSafetyStock, getWarehouses, doInventoryCheck } from
 import { debounce, canWrite } from '../utils.js'
 
 const list = ref([]), search = ref(''), warehouseFilter = ref(''), categoryFilter = ref('')
-const page = ref(1), total = ref(0), pageSize = 20
+const page = ref(1), total = ref(0), pageSize = 20, loading = ref(true)
 const warehouses = ref([]), categories = ref([])
 const showSafety = ref(false), safetyTarget = ref(null), safetyValue = ref(0), safetyError = ref('')
 const checkWarehouse = ref(''), checkItems = ref([]), checkResult = ref('')
 
 async function fetchList() {
+  loading.value = true
   const data = await getInventory({
     search: search.value, warehouse_id: warehouseFilter.value, category: categoryFilter.value, page: page.value
   })
-  list.value = data.data; total.value = data.total
+  list.value = data.data; total.value = data.total; loading.value = false
 }
 function onSearch() { page.value = 1; debouncedSearch() }
 const debouncedSearch = debounce(fetchList, 300)

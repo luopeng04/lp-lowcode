@@ -13,22 +13,27 @@
         <div><label>仓库</label><span>{{ order.warehouse_name }}</span></div>
         <div><label>日期</label><span>{{ order.ordered_at || '-' }}</span></div>
         <div><label>金额</label><span class="amount">{{ order.total_amount }}</span></div>
+        <div v-for="f in orderFields" :key="f.field_name">
+          <label>{{ f.field_label }}</label><span>{{ (order.custom_data || {})[f.field_name] || '-' }}</span>
+        </div>
       </div>
 
       <h3>商品明细</h3>
       <table>
-        <thead><tr><th>商品</th><th>编码</th><th>单位</th><th>数量</th><th>单价</th><th>金额</th></tr></thead>
+        <thead><tr><th>商品</th><th>编码</th><th>单位</th><th>数量</th><th>单价</th><th>金额</th><th v-for="f in itemFields" :key="f.field_name">{{ f.field_label }}</th></tr></thead>
         <tbody>
           <tr v-for="item in items" :key="item.id">
             <td>{{ item.product_name }}</td><td>{{ item.product_code }}</td><td>{{ item.unit }}</td>
             <td>{{ item.quantity }}</td><td>{{ item.unit_price }}</td><td>{{ item.amount }}</td>
+            <td v-for="f in itemFields" :key="f.field_name">{{ (item.custom_data || {})[f.field_name] || '-' }}</td>
           </tr>
         </tbody>
       </table>
 
-      <div v-if="canWrite()" class="actions">
-        <button v-if="order.status === 'draft'" class="btn-primary" @click="handleConfirm">审核通过</button>
-        <button v-if="order.status === 'confirmed'" class="btn-success" @click="handleDeliver">确认出库</button>
+      <div class="actions">
+        <button class="btn-secondary" @click="window.print()">打印</button>
+        <button v-if="order.status === 'draft' && canWrite()" class="btn-primary" @click="handleConfirm">审核通过</button>
+        <button v-if="order.status === 'confirmed' && canWrite()" class="btn-success" @click="handleDeliver">确认出库</button>
       </div>
     </div>
 
@@ -40,17 +45,23 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import ConfirmModal from '../components/ConfirmModal.vue'
-import { getSalesOrder, confirmSalesOrder, deliverSalesOrder } from '../api.js'
+import { getSalesOrder, confirmSalesOrder, deliverSalesOrder, getCustomFields } from '../api.js'
 import { canWrite } from '../utils.js'
 
 const route = useRoute()
 const order = ref(null), items = ref([])
+const orderFields = ref([]), itemFields = ref([])
 const statusMap = { draft: '草稿', confirmed: '已审核', delivered: '已出库', cancelled: '已取消' }
 const confirmMsg = ref(''), confirmAction = ref(null)
 
 async function load() {
-  const data = await getSalesOrder(route.params.id)
-  order.value = data.order; items.value = data.items
+  const [orderData, of, itf] = await Promise.all([
+    getSalesOrder(route.params.id),
+    getCustomFields('sales_order'),
+    getCustomFields('sales_order_item'),
+  ])
+  order.value = orderData.order; items.value = orderData.items
+  orderFields.value = of.data; itemFields.value = itf.data
 }
 
 function askConfirm(msg, action) {

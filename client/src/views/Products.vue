@@ -41,7 +41,7 @@
             <button class="btn-danger" @click="handleDelete(p)">删除</button>
           </td>
         </tr>
-        <tr v-if="list.length === 0"><td :colspan="8 + customFields.length" class="empty">暂无数据</td></tr>
+        <tr v-if="list.length === 0"><td :colspan="8 + customFields.length" :class="loading ? 'loading-row' : 'empty'">{{ loading ? '加载中...' : '暂无数据' }}</td></tr>
       </tbody>
     </table>
     </div>
@@ -143,7 +143,7 @@ import {
 import ConfirmModal from '../components/ConfirmModal.vue'
 import { debounce, canWrite } from '../utils.js'
 
-const list = ref([]), search = ref(''), categoryFilter = ref(''), page = ref(1), total = ref(0), pageSize = 20
+const list = ref([]), search = ref(''), categoryFilter = ref(''), page = ref(1), total = ref(0), pageSize = 20, loading = ref(true)
 const categories = ref([])
 const customFields = ref([])
 const showModal = ref(false), editing = ref(null), saving = ref(false), error = ref('')
@@ -153,8 +153,9 @@ const showFieldsModal = ref(false), fieldError = ref('')
 const newField = reactive({ field_name: '', field_label: '', field_type: 'text', optionsStr: '' })
 
 async function fetchList() {
+  loading.value = true
   const data = await getProducts({ search: search.value, category: categoryFilter.value, page: page.value })
-  list.value = data.data; total.value = data.total
+  list.value = data.data; total.value = data.total; loading.value = false
 }
 
 function onSearch() { page.value = 1; debouncedSearch() }

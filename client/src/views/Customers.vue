@@ -2,7 +2,10 @@
   <div class="page">
     <div class="header">
       <h1>客户管理</h1>
-      <button v-if="canWrite()" class="btn-primary" @click="openCreate">+ 新建客户</button>
+      <div class="header-actions" v-if="canWrite()">
+        <button class="btn-secondary" @click="openFieldsModal">自定义字段</button>
+        <button class="btn-primary" @click="openCreate">+ 新建客户</button>
+      </div>
     </div>
 
     <div class="toolbar">
@@ -14,18 +17,19 @@
     <div class="table-wrap">
     <table>
       <thead>
-        <tr><th>编码</th><th>名称</th><th>联系人</th><th>电话</th><th>地址</th><th>备注</th><th>操作</th></tr>
+        <tr><th>编码</th><th>名称</th><th>联系人</th><th>电话</th><th>地址</th><th>备注</th><th v-for="f in customFields" :key="f.field_name">{{ f.field_label }}</th><th>操作</th></tr>
       </thead>
       <tbody>
         <tr v-for="c in list" :key="c.id">
           <td>{{ c.code }}</td><td>{{ c.name }}</td><td>{{ c.contact || '-' }}</td>
           <td>{{ c.phone || '-' }}</td><td>{{ c.address || '-' }}</td><td>{{ c.remark || '-' }}</td>
+          <td v-for="f in customFields" :key="f.field_name">{{ (c.custom_data || {})[f.field_name] || '-' }}</td>
           <td v-if="canWrite()">
             <button @click="openEdit(c)">编辑</button>
             <button class="btn-danger" @click="handleDelete(c)">删除</button>
           </td>
         </tr>
-        <tr v-if="list.length === 0"><td colspan="7" class="empty">暂无数据</td></tr>
+        <tr v-if="list.length === 0"><td :colspan="7 + customFields.length" :class="loading ? 'loading-row' : 'empty'">{{ loading ? '加载中...' : '暂无数据' }}</td></tr>
       </tbody>
     </table>
     </div>
@@ -46,6 +50,17 @@
           <label>电话</label><input v-model="form.phone" />
           <label>地址</label><input v-model="form.address" />
           <label>备注</label><input v-model="form.remark" />
+
+          <div v-for="f in customFields" :key="f.field_name">
+            <label>{{ f.field_label }} <span v-if="f.is_required" class="required">*</span></label>
+            <input v-if="f.field_type === 'text' || f.field_type === 'number'" v-model="form.custom_data[f.field_name]" :type="f.field_type" />
+            <select v-else-if="f.field_type === 'select'" v-model="form.custom_data[f.field_name]">
+              <option value="">请选择</option>
+              <option v-for="opt in (typeof f.options === 'string' ? JSON.parse(f.options) : f.options || [])" :key="opt" :value="opt">{{ opt }}</option>
+            </select>
+            <input v-else-if="f.field_type === 'date'" v-model="form.custom_data[f.field_name]" type="date" />
+          </div>
+
           <p v-if="error" class="error">{{ error }}</p>
           <div class="modal-actions">
             <button type="button" @click="closeModal">取消</button>
@@ -55,38 +70,46 @@
       </div>
     </div>
 
+    <CustomFieldsModal :visible="showFieldsModal" :fields="customFields" :newField="newField" :error="fieldError" @close="closeFieldsModal" @add="addField" @delete="deleteField" />
+
     <ConfirmModal v-if="confirmMsg" :message="confirmMsg" @confirm="onConfirm" @cancel="onCancel" />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { getCustomers, createCustomer, updateCustomer, deleteCustomer } from '../api.js'
 import ConfirmModal from '../components/ConfirmModal.vue'
+import CustomFieldsModal from '../components/CustomFieldsModal.vue'
 import { debounce, canWrite } from '../utils.js'
 import { useConfirm } from '../composables/useConfirm'
+import { useCustomFields } from '../composables/useCustomFields'
 
-const list = ref([]), search = ref(''), page = ref(1), total = ref(0), pageSize = 20
+const list = ref([]), search = ref(''), page = ref(1), total = ref(0), pageSize = 20, loading = ref(true)
 const { confirmMsg, askConfirm, onConfirm, onCancel } = useConfirm()
+const { customFields, showFieldsModal, fieldError, newField, fetchFields, openFieldsModal, closeFieldsModal, addField, deleteField } = useCustomFields('customer')
 const showModal = ref(false), editing = ref(null), saving = ref(false), error = ref('')
-const form = ref({ code: '', name: '', contact: '', phone: '', address: '', remark: '' })
+const form = reactive({ code: '', name: '', contact: '', phone: '', address: '', remark: '', custom_data: {} })
 
 function onSearch() { page.value = 1; debouncedSearch() }
 const debouncedSearch = debounce(fetchList, 300)
 
 async function fetchList() {
+  loading.value = true
   const data = await getCustomers(search.value, page.value)
-  list.value = data.data; total.value = data.total
+  list.value = data.data; total.value = data.total; loading.value = false
 }
 
 function openCreate() {
   editing.value = null; error.value = ''
-  form.value = { code: '', name: '', contact: '', phone: '', address: '', remark: '' }
+  form.code = ''; form.name = ''; form.contact = ''; form.phone = ''; form.address = ''; form.remark = ''
+  form.custom_data = {}
   showModal.value = true
 }
 function openEdit(c) {
   editing.value = c; error.value = ''
-  form.value = { code: c.code, name: c.name, contact: c.contact || '', phone: c.phone || '', address: c.address || '', remark: c.remark || '' }
+  form.code = c.code; form.name = c.name; form.contact = c.contact || ''; form.phone = c.phone || ''; form.address = c.address || ''; form.remark = c.remark || ''
+  form.custom_data = { ...(c.custom_data || {}) }
   showModal.value = true
 }
 function closeModal() { showModal.value = false }
@@ -94,17 +117,21 @@ function closeModal() { showModal.value = false }
 async function handleSave() {
   error.value = ''; saving.value = true
   try {
-    if (editing.value) await updateCustomer(editing.value.id, form.value)
-    else await createCustomer(form.value)
+    const data = { code: form.code, name: form.name, contact: form.contact, phone: form.phone, address: form.address, remark: form.remark, custom_data: form.custom_data }
+    if (editing.value) await updateCustomer(editing.value.id, data)
+    else await createCustomer(data)
     closeModal(); await fetchList()
   } catch (e) { error.value = e.message } finally { saving.value = false }
 }
 
 async function handleDelete(c) {
-  askConfirm(`确认删除客户"${c.name}"？`, () => deleteCustomer(c.id))
+  askConfirm(`确认删除客户"${c.name}"？`, async () => {
+    await deleteCustomer(c.id)
+    await fetchList()
+  })
 }
 
-onMounted(fetchList)
+onMounted(async () => { await fetchFields(); await fetchList() })
 </script>
 
 <style scoped>

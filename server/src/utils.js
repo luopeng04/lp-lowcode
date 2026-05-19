@@ -14,4 +14,13 @@ function writeGuard(router) {
   })
 }
 
-module.exports = { validateId, writeGuard }
+function parseCustomData(row) {
+  if (row.custom_data) {
+    row.custom_data = typeof row.custom_data === 'string' ? JSON.parse(row.custom_data) : row.custom_data
+  } else {
+    row.custom_data = {}
+  }
+  return row
+}
+
+module.exports = { validateId, writeGuard, parseCustomData }

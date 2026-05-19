@@ -20,9 +20,10 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { getMenuSettings } from '../api'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -39,12 +40,28 @@ const allMenus = [
   { path: '/inventory-ledger', label: '库存流水', roles: ['admin', 'operator', 'readonly'] },
   { path: '/reports', label: '经营报表', roles: ['admin', 'operator', 'readonly'] },
   { path: '/operators', label: '操作员管理', roles: ['admin'] },
+  { path: '/menu-settings', label: '菜单设置', roles: ['admin'] },
 ]
+
+const menuSettings = ref([])
+
+async function fetchMenuSettings() {
+  try {
+    const data = await getMenuSettings()
+    menuSettings.value = data.data
+  } catch { /* use defaults if menu_settings table not yet seeded */ }
+}
 
 const visibleMenus = computed(() => {
   const role = auth.operator?.role || 'readonly'
-  return allMenus.filter(m => m.roles.includes(role))
+  return allMenus.filter(m => {
+    if (!m.roles.includes(role)) return false
+    const setting = menuSettings.value.find(s => s.menu_path === m.path)
+    return setting ? setting.visible === 1 : true
+  })
 })
+
+onMounted(fetchMenuSettings)
 
 function logout() {
   auth.logout()

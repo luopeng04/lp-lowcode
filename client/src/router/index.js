@@ -99,6 +99,12 @@ const routes = [
         component: () => import('../views/Reports.vue'),
         meta: { title: '经营报表' },
       },
+      {
+        path: 'menu-settings',
+        name: 'menu-settings',
+        component: () => import('../views/MenuSettings.vue'),
+        meta: { title: '菜单设置' },
+      },
     ],
   },
 ]

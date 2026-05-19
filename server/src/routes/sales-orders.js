@@ -1,6 +1,6 @@
 const { Router } = require('express')
 const { getTenantPool } = require('../config/database')
-const { validateId, writeGuard } = require('../utils')
+const { validateId, writeGuard, parseCustomData } = require('../utils')
 const { deductStock } = require('../services/inventory-engine')
 const { generateOrderNo, withTransaction } = require('../services/order-machine')
 
@@ -35,6 +35,7 @@ router.get('/api/sales-orders', async (req, res) => {
   params.push(parseInt(pageSize), offset)
 
   const [rows] = await pool.query(sql, params)
+  const data = rows.map(parseCustomData)
 
   let countSql = `SELECT COUNT(*) as total FROM sales_orders so
     LEFT JOIN customers c ON so.customer_id = c.id
@@ -43,7 +44,7 @@ router.get('/api/sales-orders', async (req, res) => {
   if (search) { countSql += ' AND (so.order_no LIKE ? OR c.name LIKE ?)'; countParams.push(`%${search}%`, `%${search}%`) }
   if (status) { countSql += ' AND so.status = ?'; countParams.push(status) }
   const [[{ total }]] = await pool.query(countSql, countParams)
-  res.json({ data: rows, total, page: parseInt(page), pageSize: parseInt(pageSize) })
+  res.json({ data, total, page: parseInt(page), pageSize: parseInt(pageSize) })
 })
 
 // GET /api/sales-orders/:id
@@ -68,13 +69,13 @@ router.get('/api/sales-orders/:id', async (req, res) => {
      WHERE soi.order_id = ?`, [id]
   )
 
-  res.json({ order: orders[0], items })
+  res.json({ order: parseCustomData(orders[0]), items: items.map(parseCustomData) })
 })
 
 // POST /api/sales-orders
 router.post('/api/sales-orders', async (req, res) => {
   const pool = getTenantPool(req.tenant.db_name)
-  const { customer_id, warehouse_id, items, ordered_at } = req.body
+  const { customer_id, warehouse_id, items, ordered_at, custom_data } = req.body
 
   if (!customer_id || !warehouse_id || !items || items.length === 0) {
     return res.status(400).json({ error: '客户、仓库和商品明细不能为空' })
@@ -94,15 +95,15 @@ router.post('/api/sales-orders', async (req, res) => {
   const result = await withTransaction(pool, async (conn) => {
     const orderNo = await generateOrderNo(conn, { prefix: 'SO', table: 'sales_orders' })
     const [insertResult] = await conn.query(
-      'INSERT INTO sales_orders (order_no, customer_id, warehouse_id, total_amount, ordered_at) VALUES (?,?,?,?,?)',
-      [orderNo, customer_id, warehouse_id, totalAmount, ordered_at || null]
+      'INSERT INTO sales_orders (order_no, customer_id, warehouse_id, total_amount, ordered_at, custom_data) VALUES (?,?,?,?,?,?)',
+      [orderNo, customer_id, warehouse_id, totalAmount, ordered_at || null, custom_data ? JSON.stringify(custom_data) : null]
     )
     const orderId = insertResult.insertId
 
     for (const item of items) {
       await conn.query(
-        'INSERT INTO sales_order_items (order_id, product_id, quantity, unit_price, amount) VALUES (?,?,?,?,?)',
-        [orderId, item.product_id, item.quantity, item.unit_price, item.quantity * item.unit_price]
+        'INSERT INTO sales_order_items (order_id, product_id, quantity, unit_price, amount, custom_data) VALUES (?,?,?,?,?,?)',
+        [orderId, item.product_id, item.quantity, item.unit_price, item.quantity * item.unit_price, item.custom_data ? JSON.stringify(item.custom_data) : null]
       )
     }
 

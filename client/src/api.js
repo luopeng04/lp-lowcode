@@ -31,10 +31,10 @@ async function request(path, options = {}) {
 }
 
 // Auth
-export function register(phone, password, name) {
+export function register(phone, password, name, industry) {
   return request('/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ phone, password, name }),
+    body: JSON.stringify({ phone, password, name, industry }),
   })
 }
 
@@ -127,6 +127,16 @@ export function createCustomField(data) {
 }
 export function deleteCustomField(id) {
   return request(`/custom-fields/${id}`, { method: 'DELETE' })
+}
+
+// Menu settings
+export function getMenuSettings() {
+  return request('/menu-settings')
+}
+export function updateMenuSetting(menuPath, visible) {
+  return request('/menu-settings', {
+    method: 'PUT', body: JSON.stringify({ menu_path: menuPath, visible }),
+  })
 }
 
 // Operators

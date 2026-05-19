@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS suppliers (
   phone VARCHAR(20),
   address VARCHAR(500),
   remark VARCHAR(500),
+  custom_data JSON COMMENT '自定义字段值',
   status TINYINT NOT NULL DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -53,6 +54,8 @@ CREATE TABLE IF NOT EXISTS customers (
   contact VARCHAR(50),
   phone VARCHAR(20),
   address VARCHAR(500),
+  remark VARCHAR(500),
+  custom_data JSON COMMENT '自定义字段值',
   status TINYINT NOT NULL DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -80,6 +83,7 @@ CREATE TABLE IF NOT EXISTS purchase_orders (
   total_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
   status ENUM('draft','confirmed','received','cancelled') NOT NULL DEFAULT 'draft',
   ordered_at DATE,
+  custom_data JSON COMMENT '自定义字段值',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
@@ -91,7 +95,8 @@ CREATE TABLE IF NOT EXISTS purchase_order_items (
   product_id INT NOT NULL,
   quantity DECIMAL(12,2) NOT NULL,
   unit_price DECIMAL(12,2) NOT NULL,
-  amount DECIMAL(12,2) NOT NULL
+  amount DECIMAL(12,2) NOT NULL,
+  custom_data JSON COMMENT '自定义字段值'
 ) ENGINE=InnoDB;
 
 -- 销售单
@@ -103,6 +108,7 @@ CREATE TABLE IF NOT EXISTS sales_orders (
   total_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
   status ENUM('draft','confirmed','delivered','cancelled') NOT NULL DEFAULT 'draft',
   ordered_at DATE,
+  custom_data JSON COMMENT '自定义字段值',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
@@ -114,7 +120,8 @@ CREATE TABLE IF NOT EXISTS sales_order_items (
   product_id INT NOT NULL,
   quantity DECIMAL(12,2) NOT NULL,
   unit_price DECIMAL(12,2) NOT NULL,
-  amount DECIMAL(12,2) NOT NULL
+  amount DECIMAL(12,2) NOT NULL,
+  custom_data JSON COMMENT '自定义字段值'
 ) ENGINE=InnoDB;
 
 -- 库存
@@ -162,4 +169,12 @@ CREATE TABLE IF NOT EXISTS categories (
   parent_id INT DEFAULT 0,
   display_order INT NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- 菜单显隐设置
+CREATE TABLE IF NOT EXISTS menu_settings (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  menu_path VARCHAR(100) NOT NULL UNIQUE,
+  menu_label VARCHAR(50) NOT NULL,
+  visible TINYINT NOT NULL DEFAULT 1
 ) ENGINE=InnoDB;

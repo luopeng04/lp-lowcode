@@ -3,18 +3,15 @@
     <div class="card">
       <h1>登录</h1>
       <form @submit.prevent="handleLogin">
-        <label>手机号（商户号）</label>
-        <input v-model="phone" placeholder="请输入商户手机号" />
+        <label>商户手机号</label>
+        <input v-model="phone" placeholder="注册时使用的手机号" />
+        <p class="hint">即注册本商户时所用的手机号，由管理员提供</p>
 
-        <label v-if="showUsername">操作员用户名</label>
-        <input v-if="showUsername" v-model="username" placeholder="管理员留空" />
+        <label>操作员用户名</label>
+        <input v-model="username" placeholder="管理员无需填写" />
 
         <label>密码</label>
         <input v-model="password" type="password" placeholder="请输入密码" />
-
-        <label class="toggle-user" @click="showUsername = !showUsername">
-          {{ showUsername ? '管理员登录' : '操作员登录' }}
-        </label>
 
         <p v-if="error" class="error">{{ error }}</p>
 
@@ -40,15 +37,19 @@ const auth = useAuthStore()
 const phone = ref('')
 const username = ref('')
 const password = ref('')
-const showUsername = ref(false)
 const error = ref('')
 const loading = ref(false)
 
 async function handleLogin() {
   error.value = ''
+  if (!phone.value.trim()) { error.value = '请输入商户手机号'; return }
+  if (!/^1[3-9]\d{9}$/.test(phone.value.trim())) { error.value = '手机号格式不正确'; return }
+  if (!password.value) { error.value = '请输入密码'; return }
+  if (password.value.length < 6) { error.value = '密码至少6位'; return }
+
   loading.value = true
   try {
-    const data = await login(phone.value, password.value, username.value || undefined)
+    const data = await login(phone.value.trim(), password.value, username.value.trim() || undefined)
     auth.setAuth(data.tenant, data.operator)
     router.push('/')
   } catch (e) {
@@ -94,5 +95,5 @@ button:disabled { opacity: .6; cursor: not-allowed; }
 .error { color: var(--color-danger); font-size: var(--font-size-base); margin-top: 12px; }
 .switch { margin-top: var(--space-md); font-size: var(--font-size-base); color: var(--text-muted); text-align: center; }
 .switch a { color: var(--color-primary); text-decoration: none; }
-.toggle-user { color: var(--color-primary); cursor: pointer; font-size: var(--font-size-sm); margin-top: 0 !important; user-select: none; }
+.hint { font-size: var(--font-size-xs); color: var(--text-muted); margin: -2px 0 0; }
 </style>

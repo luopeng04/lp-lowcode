@@ -13,8 +13,9 @@ body {
 /* Page layout */
 .page { width: 100%; }
 .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md); }
-.header h1, .page h1 { font-size: var(--font-size-2xl); font-weight: var(--font-weight-semibold); margin-bottom: var(--space-md); color: var(--text-primary); }
-.toolbar { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
+.header h1, .page h1 { font-size: var(--font-size-2xl); font-weight: var(--font-weight-semibold); margin: 0; color: var(--text-primary); }
+.header-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+.toolbar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
 .search, .toolbar .search { width: 220px; padding: 7px 10px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); font-size: var(--font-size-base); font-family: var(--font-family); transition: border-color var(--transition-fast); }
 .search:focus, .toolbar .search:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 2px var(--color-primary-light); }
 .toolbar select, .toolbar .filter, .page select {
@@ -107,6 +108,9 @@ td button.btn-danger { border-color: var(--color-danger-light); color: var(--col
 td button.btn-danger:hover { background: var(--color-danger-light); }
 .empty { text-align: center; color: var(--text-muted); padding: 48px var(--space-lg); font-size: var(--font-size-md); }
 .empty::before { content: '—'; display: block; font-size: 32px; margin-bottom: var(--space-sm); color: var(--border-default); }
+.loading-row { text-align: center; color: var(--text-muted); padding: 48px var(--space-lg); font-size: var(--font-size-md); }
+.loading-row::before { content: ''; display: block; width: 28px; height: 28px; margin: 0 auto var(--space-md); border: 3px solid var(--border-default); border-top-color: var(--color-primary); border-radius: 50%; animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* Pagination */
 .pager { display: flex; align-items: center; gap: 12px; margin-top: var(--space-md); font-size: var(--font-size-base); justify-content: center; }
@@ -121,10 +125,10 @@ td button.btn-danger:hover { background: var(--color-danger-light); }
 .modal h2 { font-size: var(--font-size-xl); font-weight: var(--font-weight-semibold); margin-bottom: var(--space-md); color: var(--text-primary); }
 .modal h3 { font-size: var(--font-size-md); font-weight: var(--font-weight-semibold); margin: 12px 0 8px; color: var(--text-primary); }
 .modal label { display: block; font-size: var(--font-size-base); color: var(--text-secondary); margin-bottom: 2px; font-weight: var(--font-weight-medium); }
-.modal input, .modal select {
+.modal input, .modal select, .modal textarea {
   width: 100%; padding: 7px 10px; border: 1px solid var(--border-default); border-radius: var(--radius-sm);
   font-size: var(--font-size-md); margin-bottom: 8px; box-sizing: border-box; font-family: var(--font-family);
-  transition: border-color var(--transition-fast);
+  transition: border-color var(--transition-fast); background: var(--bg-surface);
 }
 .modal input:focus, .modal select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 2px var(--color-primary-light); }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px; }
