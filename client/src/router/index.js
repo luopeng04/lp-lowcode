@@ -55,7 +55,7 @@ const routes = [
         path: 'operators',
         name: 'operators',
         component: () => import('../views/Operators.vue'),
-        meta: { title: '操作员管理' },
+        meta: { title: '操作员管理', roles: ['admin'] },
       },
       {
         path: 'purchase-orders',
@@ -103,7 +103,7 @@ const routes = [
         path: 'menu-settings',
         name: 'menu-settings',
         component: () => import('../views/MenuSettings.vue'),
-        meta: { title: '菜单设置' },
+        meta: { title: '菜单设置', roles: ['admin'] },
       },
     ],
   },
@@ -114,12 +114,44 @@ const router = createRouter({
   routes,
 })
 
-router.beforeEach((to) => {
+function getRouteMenuPath(path) {
+  if (path === '/') return '/'
+  const [segment] = path.split('/').filter(Boolean)
+  return segment ? `/${segment}` : '/'
+}
+
+router.beforeEach(async (to) => {
   document.title = (to.meta.title ? `${to.meta.title} - ` : '') + 'lp 进销存'
 
   if (to.meta.requiresAuth) {
     const tenant = localStorage.getItem('tenant')
-    if (!tenant) return '/login'
+    const token = localStorage.getItem('authToken')
+    if (!tenant || !token) return '/login'
+
+    let operator = null
+    try {
+      operator = JSON.parse(localStorage.getItem('operator') || 'null')
+    } catch {
+      localStorage.removeItem('operator')
+    }
+    if (to.meta.roles && !to.meta.roles.includes(operator?.role)) return '/'
+
+    const menuPath = getRouteMenuPath(to.path)
+    if (menuPath !== '/') {
+      try {
+        const res = await fetch('/api/menu-settings', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (res.status === 401) return '/login'
+        if (res.ok) {
+          const data = await res.json()
+          const setting = data.data.find(item => item.menu_path === menuPath)
+          if (setting && setting.visible === 0) return '/'
+        }
+      } catch {
+        // The backend remains authoritative; keep navigation usable if this check fails.
+      }
+    }
   }
 })
 

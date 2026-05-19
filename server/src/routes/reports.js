@@ -18,7 +18,7 @@ router.get('/api/reports/sales-summary', async (req, res) => {
   else if (period === 'month') dateFormat = '%Y-%m'
   else dateFormat = '%Y-%m-%d'
 
-  let sql = `SELECT DATE_FORMAT(so.updated_at, ?) as period,
+  let sql = `SELECT DATE_FORMAT(COALESCE(so.ordered_at, DATE(so.updated_at)), ?) as period,
     COUNT(DISTINCT so.id) as order_count,
     SUM(soi.quantity) as total_qty,
     SUM(soi.amount) as total_amount
@@ -27,8 +27,9 @@ router.get('/api/reports/sales-summary', async (req, res) => {
     WHERE so.status = 'delivered'`
   const params = [dateFormat]
 
-  if (start_date) { sql += ' AND so.created_at >= ?'; params.push(start_date) }
-  if (end_date) { sql += ' AND so.created_at <= ?'; params.push(end_date + ' 23:59:59') }
+  if (start_date) { sql += ' AND COALESCE(so.ordered_at, DATE(so.updated_at)) >= ?'; params.push(start_date) }
+  if (end_date) { sql += ' AND COALESCE(so.ordered_at, DATE(so.updated_at)) <= ?'; params.push(end_date) }
+  if (product_id) { sql += ' AND soi.product_id = ?'; params.push(product_id) }
   if (customer_id) { sql += ' AND so.customer_id = ?'; params.push(customer_id) }
   if (warehouse_id) { sql += ' AND so.warehouse_id = ?'; params.push(warehouse_id) }
 
@@ -55,8 +56,8 @@ router.get('/api/reports/profit', async (req, res) => {
     WHERE so.status = 'delivered'`
   const params = []
 
-  if (start_date) { sql += ' AND so.created_at >= ?'; params.push(start_date) }
-  if (end_date) { sql += ' AND so.created_at <= ?'; params.push(end_date + ' 23:59:59') }
+  if (start_date) { sql += ' AND COALESCE(so.ordered_at, DATE(so.updated_at)) >= ?'; params.push(start_date) }
+  if (end_date) { sql += ' AND COALESCE(so.ordered_at, DATE(so.updated_at)) <= ?'; params.push(end_date) }
   if (product_id) { sql += ' AND soi.product_id = ?'; params.push(product_id) }
 
   sql += ' GROUP BY p.id ORDER BY profit DESC'
@@ -81,8 +82,8 @@ router.get('/api/reports/purchase-summary', async (req, res) => {
     WHERE po.status = 'received'`
   const params = []
 
-  if (start_date) { sql += ' AND po.created_at >= ?'; params.push(start_date) }
-  if (end_date) { sql += ' AND po.created_at <= ?'; params.push(end_date + ' 23:59:59') }
+  if (start_date) { sql += ' AND COALESCE(po.ordered_at, DATE(po.updated_at)) >= ?'; params.push(start_date) }
+  if (end_date) { sql += ' AND COALESCE(po.ordered_at, DATE(po.updated_at)) <= ?'; params.push(end_date) }
   if (supplier_id) { sql += ' AND po.supplier_id = ?'; params.push(supplier_id) }
   if (product_id) { sql += ' AND poi.product_id = ?'; params.push(product_id) }
 

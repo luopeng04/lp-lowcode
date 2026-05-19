@@ -25,4 +25,17 @@ async function withTransaction(pool, fn) {
   }
 }
 
-module.exports = { generateOrderNo, withTransaction }
+async function withDuplicateRetry(fn, attempts = 3) {
+  let lastError
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      return await fn()
+    } catch (err) {
+      lastError = err
+      if (err.code !== 'ER_DUP_ENTRY') throw err
+    }
+  }
+  throw lastError
+}
+
+module.exports = { generateOrderNo, withTransaction, withDuplicateRetry }

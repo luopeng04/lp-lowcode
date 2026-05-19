@@ -1,8 +1,8 @@
 const { requireRole } = require('./middleware/operator')
 
 function validateId(id) {
-  const n = parseInt(id, 10)
-  if (isNaN(n) || n < 1) return null
+  const n = Number(id)
+  if (!Number.isInteger(n) || n < 1) return null
   return n
 }
 

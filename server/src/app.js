@@ -28,6 +28,10 @@ app.use(routes)
 
 app.use(tenantMiddleware)
 app.use(operatorMiddleware)
+app.use((req, res, next) => {
+  if (!req.operator) return res.status(401).json({ error: '未登录' })
+  next()
+})
 app.use(warehouseRoutes)
 app.use(supplierRoutes)
 app.use(customerRoutes)

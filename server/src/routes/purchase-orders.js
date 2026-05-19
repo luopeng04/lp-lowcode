@@ -2,7 +2,8 @@ const { Router } = require('express')
 const { getTenantPool } = require('../config/database')
 const { validateId, writeGuard, parseCustomData } = require('../utils')
 const { receiveStock } = require('../services/inventory-engine')
-const { generateOrderNo, withTransaction } = require('../services/order-machine')
+const { generateOrderNo, withTransaction, withDuplicateRetry } = require('../services/order-machine')
+const AppError = require('../utils/AppError')
 
 const router = Router()
 
@@ -85,17 +86,36 @@ router.post('/api/purchase-orders', async (req, res) => {
   }
 
   for (const item of items) {
-    if (!item.product_id || !item.quantity || item.quantity <= 0) {
+    item.product_id = validateId(item.product_id)
+    item.quantity = Number(item.quantity)
+    item.unit_price = Number(item.unit_price ?? 0)
+    if (!item.product_id || !Number.isFinite(item.quantity) || item.quantity <= 0) {
       return res.status(400).json({ error: '商品数量必须大于0' })
     }
-    if (item.unit_price < 0) {
+    if (!Number.isFinite(item.unit_price) || item.unit_price < 0) {
       return res.status(400).json({ error: '单价不能为负数' })
     }
   }
 
   const totalAmount = items.reduce((sum, i) => sum + i.quantity * i.unit_price, 0)
 
-  const result = await withTransaction(pool, async (conn) => {
+  const result = await withDuplicateRetry(() => withTransaction(pool, async (conn) => {
+    const [[supplier]] = await conn.query('SELECT id FROM suppliers WHERE id = ? AND status = 1', [supplier_id])
+    if (!supplier) throw new AppError(400, '供应商不存在或已停用')
+
+    const [[warehouse]] = await conn.query('SELECT id FROM warehouses WHERE id = ? AND status = 1', [warehouse_id])
+    if (!warehouse) throw new AppError(400, '仓库不存在或已停用')
+
+    const productIds = [...new Set(items.map(item => Number(item.product_id)))]
+    const placeholders = productIds.map(() => '?').join(',')
+    const [products] = await conn.query(
+      `SELECT id FROM products WHERE id IN (${placeholders}) AND status = 1`,
+      productIds
+    )
+    if (products.length !== productIds.length) {
+      throw new AppError(400, '商品不存在或已停用')
+    }
+
     const orderNo = await generateOrderNo(conn, { prefix: 'PO', table: 'purchase_orders' })
     const [insertResult] = await conn.query(
       'INSERT INTO purchase_orders (order_no, supplier_id, warehouse_id, total_amount, ordered_at, custom_data) VALUES (?,?,?,?,?,?)',
@@ -111,7 +131,7 @@ router.post('/api/purchase-orders', async (req, res) => {
     }
 
     return { id: orderId, order_no: orderNo }
-  })
+  }))
   res.status(201).json(result)
 })
 
@@ -121,11 +141,13 @@ router.put('/api/purchase-orders/:id/confirm', async (req, res) => {
   const id = validateId(req.params.id)
   if (!id) return res.status(400).json({ error: '参数错误' })
 
-  const [orders] = await pool.query('SELECT * FROM purchase_orders WHERE id = ?', [id])
-  if (orders.length === 0) return res.status(404).json({ error: '采购单不存在' })
-  if (orders[0].status !== 'draft') return res.status(400).json({ error: '只能审核草稿状态的采购单' })
+  await withTransaction(pool, async (conn) => {
+    const [orders] = await conn.query('SELECT * FROM purchase_orders WHERE id = ? FOR UPDATE', [id])
+    if (orders.length === 0) throw new AppError(404, '采购单不存在')
+    if (orders[0].status !== 'draft') throw new AppError(400, '只能审核草稿状态的采购单')
 
-  await pool.query("UPDATE purchase_orders SET status = 'confirmed' WHERE id = ?", [id])
+    await conn.query("UPDATE purchase_orders SET status = 'confirmed' WHERE id = ?", [id])
+  })
   res.json({ ok: true })
 })
 
@@ -135,14 +157,13 @@ router.put('/api/purchase-orders/:id/receive', async (req, res) => {
   const id = validateId(req.params.id)
   if (!id) return res.status(400).json({ error: '参数错误' })
 
-  const [orders] = await pool.query('SELECT * FROM purchase_orders WHERE id = ?', [id])
-  if (orders.length === 0) return res.status(404).json({ error: '采购单不存在' })
-  if (orders[0].status !== 'confirmed') return res.status(400).json({ error: '只能入库已审核的采购单' })
-
-  const order = orders[0]
-  const [items] = await pool.query('SELECT * FROM purchase_order_items WHERE order_id = ?', [id])
-
   await withTransaction(pool, async (conn) => {
+    const [orders] = await conn.query('SELECT * FROM purchase_orders WHERE id = ? FOR UPDATE', [id])
+    if (orders.length === 0) throw new AppError(404, '采购单不存在')
+    if (orders[0].status !== 'confirmed') throw new AppError(400, '只能入库已审核的采购单')
+
+    const order = orders[0]
+    const [items] = await conn.query('SELECT * FROM purchase_order_items WHERE order_id = ?', [id])
     for (const item of items) {
       await receiveStock(conn, {
         productId: item.product_id,

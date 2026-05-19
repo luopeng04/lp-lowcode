@@ -50,7 +50,7 @@ async function handleLogin() {
   loading.value = true
   try {
     const data = await login(phone.value.trim(), password.value, username.value.trim() || undefined)
-    auth.setAuth(data.tenant, data.operator)
+    auth.setAuth(data.tenant, data.operator, data.token)
     router.push('/')
   } catch (e) {
     error.value = e.message

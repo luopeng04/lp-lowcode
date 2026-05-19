@@ -9,7 +9,7 @@
 | 前端 | Vue 3 + Vite + Vue Router |
 | 后端 | Node.js + Express 5 |
 | 数据库 | MySQL，每商户独立数据库 |
-| 认证 | bcrypt 密码哈希，角色权限 |
+| 认证 | bcrypt 密码哈希，服务端签名令牌，角色权限 |
 
 ## 快速启动
 
@@ -20,7 +20,7 @@ mysql -u root -p < database/migrations/002_tenant_template.sql
 
 # 2. 配置数据库连接
 cp server/.env.example server/.env
-# 编辑 server/.env 填写数据库密码
+# 编辑 server/.env 填写数据库密码，并设置 AUTH_SECRET
 
 # 3. 启动后端
 cd server
@@ -93,11 +93,15 @@ npm run dev          # → http://localhost:5173
 | 报表 | `GET /api/reports/sales-summary` `profit` `purchase-summary` `turnover` |
 | 导出 | `GET /api/export/inventory` `GET /api/export/inventory-ledger` |
 
-所有业务 API 需传 `X-Tenant-Id` 请求头，写操作还需 `X-Operator-Id`。
+登录成功后会返回服务端签名的 `token`。所有业务 API 需传：
+
+```http
+Authorization: Bearer <token>
+```
 
 ## 多租户
 
 - 平台库 `lp_platform` 存租户元数据
 - 模板库 `lp_tenant_template` 定义表结构
 - 注册时复制模板库 → `lp_tenant_{phone}`
-- 中间件解析 `X-Tenant-Id` 动态切换连接池
+- 中间件从登录令牌解析商户身份，动态切换连接池

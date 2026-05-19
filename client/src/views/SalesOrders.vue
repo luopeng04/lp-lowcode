@@ -133,6 +133,7 @@
 
 <script setup>
 import { ref, onMounted, reactive } from 'vue'
+import { useRoute } from 'vue-router'
 import { getProducts, getWarehouses, getCustomers } from '../api.js'
 import { getSalesOrders, createSalesOrder, confirmSalesOrder, deliverSalesOrder } from '../api.js'
 import ConfirmModal from '../components/ConfirmModal.vue'
@@ -140,6 +141,7 @@ import CustomFieldsModal from '../components/CustomFieldsModal.vue'
 import { debounce, canWrite } from '../utils.js'
 import { useCustomFields } from '../composables/useCustomFields'
 
+const route = useRoute()
 const list = ref([]), search = ref(''), statusFilter = ref(''), page = ref(1), total = ref(0), pageSize = 20, loading = ref(true)
 const showModal = ref(false), saving = ref(false), error = ref('')
 const customers = ref([]), warehouses = ref([]), products = ref([])
@@ -205,7 +207,13 @@ async function handleDeliver(so) {
   })
 }
 
-onMounted(async () => { await loadMeta(); await fetchOrderFields(); await fetchItemFields(); await fetchList() })
+onMounted(async () => {
+  await loadMeta()
+  await fetchOrderFields()
+  await fetchItemFields()
+  await fetchList()
+  if (route.query.new === '1' && canWrite()) openCreate()
+})
 </script>
 
 <style scoped>

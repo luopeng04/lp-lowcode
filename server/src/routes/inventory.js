@@ -1,6 +1,7 @@
 const { Router } = require('express')
 const { getTenantPool } = require('../config/database')
 const { validateId, writeGuard } = require('../utils')
+const AppError = require('../utils/AppError')
 
 const router = Router()
 
@@ -102,23 +103,49 @@ router.post('/api/inventory-check', async (req, res) => {
     return res.status(400).json({ error: '仓库和盘点明细不能为空' })
   }
 
+  const warehouseId = validateId(warehouse_id)
+  if (!warehouseId) return res.status(400).json({ error: '仓库参数错误' })
+
+  const normalizedItems = items.map(item => ({
+    product_id: validateId(item.product_id),
+    actual_qty: Number(item.actual_qty),
+  }))
+  if (normalizedItems.some(item => !item.product_id || !Number.isFinite(item.actual_qty) || item.actual_qty < 0)) {
+    return res.status(400).json({ error: '盘点明细数量不正确' })
+  }
+
   const results = []
   const conn = await pool.getConnection()
   try {
     await conn.beginTransaction()
 
-    for (const item of items) {
+    const [[warehouse]] = await conn.query('SELECT id FROM warehouses WHERE id = ? AND status = 1', [warehouseId])
+    if (!warehouse) throw new AppError(400, '仓库不存在或已停用')
+
+    const productIds = [...new Set(normalizedItems.map(item => item.product_id))]
+    const placeholders = productIds.map(() => '?').join(',')
+    const [products] = await conn.query(
+      `SELECT id FROM products WHERE id IN (${placeholders}) AND status = 1`,
+      productIds
+    )
+    if (products.length !== productIds.length) {
+      throw new AppError(400, '商品不存在或已停用')
+    }
+
+    for (const item of normalizedItems) {
       const [invs] = await conn.query(
-        'SELECT * FROM inventories WHERE product_id = ? AND warehouse_id = ?',
-        [item.product_id, warehouse_id]
+        'SELECT * FROM inventories WHERE product_id = ? AND warehouse_id = ? FOR UPDATE',
+        [item.product_id, warehouseId]
       )
       const bookQty = invs.length > 0 ? parseFloat(invs[0].quantity) : 0
-      const diff = parseFloat(item.actual_qty) - bookQty
+      const actualQty = item.actual_qty
+      const diff = actualQty - bookQty
+      const costPrice = invs.length > 0 ? parseFloat(invs[0].avg_cost) : 0
 
       results.push({
         product_id: item.product_id,
         book_qty: bookQty,
-        actual_qty: parseFloat(item.actual_qty),
+        actual_qty: actualQty,
         diff,
       })
 
@@ -126,13 +153,18 @@ router.post('/api/inventory-check', async (req, res) => {
       if (diff !== 0) {
         const type = diff > 0 ? 'in' : 'out'
         await conn.query(
-          "INSERT INTO inventory_ledgers (product_id, warehouse_id, type, quantity, cost_price, order_type, order_id) VALUES (?,?,?,?,0,'check',0)",
-          [item.product_id, warehouse_id, type, Math.abs(diff)]
+          "INSERT INTO inventory_ledgers (product_id, warehouse_id, type, quantity, cost_price, order_type, order_id) VALUES (?,?,?,?,?,'check',0)",
+          [item.product_id, warehouseId, type, Math.abs(diff), costPrice]
         )
         if (invs.length > 0) {
           await conn.query(
             'UPDATE inventories SET quantity = ? WHERE product_id = ? AND warehouse_id = ?',
-            [item.actual_qty, item.product_id, warehouse_id]
+            [actualQty, item.product_id, warehouseId]
+          )
+        } else {
+          await conn.query(
+            'INSERT INTO inventories (product_id, warehouse_id, quantity, avg_cost) VALUES (?,?,?,0)',
+            [item.product_id, warehouseId, actualQty]
           )
         }
       }
@@ -142,6 +174,7 @@ router.post('/api/inventory-check', async (req, res) => {
     res.json({ results })
   } catch (err) {
     await conn.rollback()
+    if (err.status) return res.status(err.status).json({ error: err.message })
     console.error('[inventory-check]', err)
     res.status(500).json({ error: '盘点失败，请稍后重试' })
   } finally {

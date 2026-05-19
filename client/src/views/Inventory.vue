@@ -69,12 +69,15 @@
           <tr v-for="(item, idx) in checkItems" :key="idx">
             <td>{{ item.product_name }}</td>
             <td>{{ item.book_qty }}</td>
-            <td><input v-model.number="item.actual_qty" type="number" step="0.01" /></td>
+            <td><input v-model.number="item.actual_qty" type="number" step="0.01" min="0" /></td>
             <td :class="{ diff: (item.actual_qty - item.book_qty) !== 0 }">{{ (item.actual_qty - item.book_qty).toFixed(2) }}</td>
           </tr>
         </tbody>
       </table>
-      <button v-if="checkItems.length > 0" class="btn-primary check-submit" @click="submitCheck">保存盘点结果</button>
+      <button v-if="checkItems.length > 0" class="btn-primary check-submit" :disabled="checkSaving" @click="submitCheck">
+        {{ checkSaving ? '保存中...' : '保存盘点结果' }}
+      </button>
+      <p v-if="checkError" class="error">{{ checkError }}</p>
       <p v-if="checkResult" class="success">{{ checkResult }}</p>
     </div>
   </div>
@@ -83,14 +86,14 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
-import { getInventory, updateSafetyStock, getWarehouses, doInventoryCheck } from '../api.js'
+import { getCategories, getInventory, updateSafetyStock, getWarehouses, doInventoryCheck } from '../api.js'
 import { debounce, canWrite } from '../utils.js'
 
 const list = ref([]), search = ref(''), warehouseFilter = ref(''), categoryFilter = ref('')
 const page = ref(1), total = ref(0), pageSize = 20, loading = ref(true)
 const warehouses = ref([]), categories = ref([])
 const showSafety = ref(false), safetyTarget = ref(null), safetyValue = ref(0), safetyError = ref('')
-const checkWarehouse = ref(''), checkItems = ref([]), checkResult = ref('')
+const checkWarehouse = ref(''), checkItems = ref([]), checkResult = ref(''), checkError = ref(''), checkSaving = ref(false)
 
 async function fetchList() {
   loading.value = true
@@ -103,8 +106,9 @@ function onSearch() { page.value = 1; debouncedSearch() }
 const debouncedSearch = debounce(fetchList, 300)
 
 async function loadMeta() {
-  const w = await getWarehouses()
+  const [w, c] = await Promise.all([getWarehouses(), getCategories()])
   warehouses.value = w.data
+  categories.value = [...new Set([...c.data.map(item => item.name), ...c.fromProducts.map(item => item.name)])]
 }
 
 function openSafety(r) {
@@ -123,19 +127,42 @@ async function handleSafety() {
 
 async function loadCheckItems() {
   if (!checkWarehouse.value) return
-  const data = await getInventory({ warehouse_id: checkWarehouse.value, pageSize: 1000 })
+  checkError.value = ''
+  checkResult.value = ''
+  const data = await getInventory({ warehouse_id: checkWarehouse.value, pageSize: 10000 })
   checkItems.value = data.data.map(r => ({
     product_id: r.product_id, product_name: r.product_name,
-    book_qty: parseFloat(r.quantity), actual_qty: 0,
+    book_qty: parseFloat(r.quantity), actual_qty: parseFloat(r.quantity),
   }))
 }
 
 async function submitCheck() {
-  await doInventoryCheck({ warehouse_id: checkWarehouse.value, items: checkItems.value.map(i => ({
-    product_id: i.product_id, actual_qty: i.actual_qty || 0
-  }))})
-  checkResult.value = '盘点完成！库存已更新。'
-  await fetchList()
+  checkError.value = ''
+  checkResult.value = ''
+  const invalid = checkItems.value.find(i => !Number.isFinite(Number(i.actual_qty)) || Number(i.actual_qty) < 0)
+  if (invalid) {
+    checkError.value = `请检查"${invalid.product_name}"的实盘数量`
+    return
+  }
+
+  const changed = checkItems.value.filter(i => Number(i.actual_qty) !== Number(i.book_qty))
+  const message = changed.length > 0
+    ? `确认保存盘点结果？将调整 ${changed.length} 个商品的库存。`
+    : '本次盘点没有库存差异，仍要保存吗？'
+  if (!window.confirm(message)) return
+
+  checkSaving.value = true
+  try {
+    await doInventoryCheck({ warehouse_id: checkWarehouse.value, items: checkItems.value.map(i => ({
+      product_id: i.product_id, actual_qty: Number(i.actual_qty)
+    }))})
+    checkResult.value = '盘点完成！库存已更新。'
+    await fetchList()
+  } catch (e) {
+    checkError.value = e.message
+  } finally {
+    checkSaving.value = false
+  }
 }
 
 async function exportCSV() {
@@ -145,7 +172,7 @@ async function exportCSV() {
   if (categoryFilter.value) params.set('category', categoryFilter.value)
   if (search.value) params.set('search', search.value)
   const res = await fetch(`/api/export/inventory?${params}`, {
-    headers: { 'X-Tenant-Id': String(auth.tenant.id) }
+    headers: { Authorization: `Bearer ${auth.token}` }
   })
   const blob = await res.blob()
   const url = URL.createObjectURL(blob)

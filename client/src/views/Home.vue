@@ -29,11 +29,11 @@
     <div class="quick-links">
       <h3>快捷操作</h3>
       <div class="links-grid">
-        <router-link to="/purchase-orders" class="quick-link">
+        <router-link :to="{ path: '/purchase-orders', query: { new: '1' } }" class="quick-link">
           <span class="ql-icon">📋</span>
           <span class="ql-text">新建采购单</span>
         </router-link>
-        <router-link to="/sales-orders" class="quick-link">
+        <router-link :to="{ path: '/sales-orders', query: { new: '1' } }" class="quick-link">
           <span class="ql-icon">📦</span>
           <span class="ql-text">新建销售单</span>
         </router-link>

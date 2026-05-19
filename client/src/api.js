@@ -3,19 +3,14 @@ import { useAuthStore } from './stores/auth'
 const BASE = '/api'
 
 function getAuthHeaders() {
-  // Must be called inside a component setup or we fall back to localStorage
+  const headers = {}
   try {
     const auth = useAuthStore()
-    const headers = {}
-    if (auth.tenant) headers['X-Tenant-Id'] = String(auth.tenant.id)
-    if (auth.operator) headers['X-Operator-Id'] = String(auth.operator.id)
+    if (auth.token) headers.Authorization = `Bearer ${auth.token}`
     return headers
   } catch {
-    const tenant = JSON.parse(localStorage.getItem('tenant') || 'null')
-    const operator = JSON.parse(localStorage.getItem('operator') || 'null')
-    const headers = {}
-    if (tenant) headers['X-Tenant-Id'] = String(tenant.id)
-    if (operator) headers['X-Operator-Id'] = String(operator.id)
+    const token = localStorage.getItem('authToken')
+    if (token) headers.Authorization = `Bearer ${token}`
     return headers
   }
 }
@@ -26,6 +21,11 @@ async function request(path, options = {}) {
 
   const res = await fetch(`${BASE}${path}`, { headers, ...options })
   const data = await res.json()
+  if (res.status === 401) {
+    localStorage.removeItem('tenant')
+    localStorage.removeItem('operator')
+    localStorage.removeItem('authToken')
+  }
   if (!res.ok) throw new Error(data.error || '请求失败')
   return data
 }
@@ -64,9 +64,11 @@ export function deleteWarehouse(id) {
 }
 
 // Suppliers
-export function getSuppliers(search, page = 1) {
-  const q = `?page=${page}${search ? `&search=${encodeURIComponent(search)}` : ''}`
-  return request(`/suppliers${q}`)
+export function getSuppliers(search, page = 1, pageSize) {
+  const params = new URLSearchParams({ page })
+  if (search) params.set('search', search)
+  if (pageSize) params.set('pageSize', pageSize)
+  return request(`/suppliers?${params}`)
 }
 export function createSupplier(data) {
   return request('/suppliers', { method: 'POST', body: JSON.stringify(data) })
@@ -79,9 +81,11 @@ export function deleteSupplier(id) {
 }
 
 // Customers
-export function getCustomers(search, page = 1) {
-  const q = `?page=${page}${search ? `&search=${encodeURIComponent(search)}` : ''}`
-  return request(`/customers${q}`)
+export function getCustomers(search, page = 1, pageSize) {
+  const params = new URLSearchParams({ page })
+  if (search) params.set('search', search)
+  if (pageSize) params.set('pageSize', pageSize)
+  return request(`/customers?${params}`)
 }
 export function createCustomer(data) {
   return request('/customers', { method: 'POST', body: JSON.stringify(data) })
@@ -94,10 +98,11 @@ export function deleteCustomer(id) {
 }
 
 // Products
-export function getProducts({ search, category, page = 1 } = {}) {
+export function getProducts({ search, category, page = 1, pageSize } = {}) {
   const params = new URLSearchParams({ page })
   if (search) params.set('search', search)
   if (category) params.set('category', category)
+  if (pageSize) params.set('pageSize', pageSize)
   return request(`/products?${params}`)
 }
 export function createProduct(data) {
@@ -154,10 +159,11 @@ export function resetPassword(id, password) {
 }
 
 // Purchase orders
-export function getPurchaseOrders({ search, status, page = 1 } = {}) {
+export function getPurchaseOrders({ search, status, page = 1, pageSize } = {}) {
   const params = new URLSearchParams({ page })
   if (search) params.set('search', search)
   if (status) params.set('status', status)
+  if (pageSize) params.set('pageSize', pageSize)
   return request(`/purchase-orders?${params}`)
 }
 export function getPurchaseOrder(id) {
@@ -174,10 +180,11 @@ export function receivePurchaseOrder(id) {
 }
 
 // Sales orders
-export function getSalesOrders({ search, status, page = 1 } = {}) {
+export function getSalesOrders({ search, status, page = 1, pageSize } = {}) {
   const params = new URLSearchParams({ page })
   if (search) params.set('search', search)
   if (status) params.set('status', status)
+  if (pageSize) params.set('pageSize', pageSize)
   return request(`/sales-orders?${params}`)
 }
 export function getSalesOrder(id) {
@@ -194,23 +201,25 @@ export function deliverSalesOrder(id) {
 }
 
 // Inventory
-export function getInventory({ warehouse_id, category, search, page = 1 } = {}) {
+export function getInventory({ warehouse_id, category, search, page = 1, pageSize } = {}) {
   const params = new URLSearchParams({ page })
   if (warehouse_id) params.set('warehouse_id', warehouse_id)
   if (category) params.set('category', category)
   if (search) params.set('search', search)
+  if (pageSize) params.set('pageSize', pageSize)
   return request(`/inventory?${params}`)
 }
 export function updateSafetyStock(id, safety_stock) {
   return request(`/inventory/${id}/safety-stock`, { method: 'PUT', body: JSON.stringify({ safety_stock }) })
 }
-export function getInventoryLedgers({ product_id, warehouse_id, type, start_date, end_date, page = 1 } = {}) {
+export function getInventoryLedgers({ product_id, warehouse_id, type, start_date, end_date, page = 1, pageSize } = {}) {
   const params = new URLSearchParams({ page })
   if (product_id) params.set('product_id', product_id)
   if (warehouse_id) params.set('warehouse_id', warehouse_id)
   if (type) params.set('type', type)
   if (start_date) params.set('start_date', start_date)
   if (end_date) params.set('end_date', end_date)
+  if (pageSize) params.set('pageSize', pageSize)
   return request(`/inventory-ledgers?${params}`)
 }
 export function doInventoryCheck(data) {

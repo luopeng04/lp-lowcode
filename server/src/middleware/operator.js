@@ -1,7 +1,7 @@
 const { getTenantPool } = require('../config/database')
 
 async function operatorMiddleware(req, res, next) {
-  const operatorId = req.headers['x-operator-id']
+  const operatorId = req.auth?.operatorId
 
   if (!operatorId || !req.tenant) {
     req.operator = null

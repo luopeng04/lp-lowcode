@@ -2,6 +2,7 @@ const { Router } = require('express')
 const bcrypt = require('bcryptjs')
 const { getPlatformPool, getTenantPool } = require('../config/database')
 const { createTenantDatabase, seedTenantData } = require('../services/tenant-db')
+const { signToken } = require('../services/auth-token')
 const loginLimiter = require('../middleware/rate-limiter')
 
 const router = Router()
@@ -112,7 +113,14 @@ router.post('/api/auth/login', loginLimiter, async (req, res) => {
       return res.status(401).json({ error: '手机号或密码错误' })
     }
 
+    const token = signToken({
+      tenantId: tenant.id,
+      dbName: tenant.db_name,
+      operatorId: operator.id,
+    })
+
     res.json({
+      token,
       tenant: {
         id: tenant.id,
         name: tenant.name,

@@ -92,7 +92,7 @@ async function exportCSV() {
   if (typeFilter.value) params.set('type', typeFilter.value)
   if (productFilter.value) params.set('product_id', productFilter.value)
   const res = await fetch(`/api/export/inventory-ledger?${params}`, {
-    headers: { 'X-Tenant-Id': String(auth.tenant.id) }
+    headers: { Authorization: `Bearer ${auth.token}` }
   })
   const blob = await res.blob()
   const url = URL.createObjectURL(blob)
