@@ -37,7 +37,11 @@
           <td>{{ l.product_name }}</td><td>{{ l.warehouse_name }}</td>
           <td :class="l.type === 'in' ? 'in' : 'out'">{{ l.type === 'in' ? '入库' : '出库' }}</td>
           <td>{{ l.quantity }}</td><td>{{ l.cost_price }}</td>
-          <td>{{ l.order_no }}</td>
+          <td>
+            <router-link v-if="l.order_type === 'purchase'" :to="`/purchase-orders/${l.order_id}`">采购单 {{ l.order_no }}</router-link>
+            <router-link v-else-if="l.order_type === 'sale'" :to="`/sales-orders/${l.order_id}`">销售单 {{ l.order_no }}</router-link>
+            <span v-else class="text-muted">盘点调整</span>
+          </td>
         </tr>
         <tr v-if="list.length === 0"><td colspan="7" class="empty">暂无数据</td></tr>
       </tbody>
@@ -102,4 +106,7 @@ onMounted(async () => { await loadMeta(); await fetchList() })
 .toolbar { flex-wrap: wrap; font-size: var(--font-size-base); }
 .in { color: var(--color-success); font-weight: var(--font-weight-semibold); }
 .out { color: var(--color-danger); font-weight: var(--font-weight-semibold); }
+td a { color: var(--color-primary); text-decoration: none; }
+td a:hover { text-decoration: underline; }
+.text-muted { color: var(--text-muted); }
 </style>
